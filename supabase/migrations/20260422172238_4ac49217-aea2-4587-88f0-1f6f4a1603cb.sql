@@ -1,0 +1,1 @@
+ALTER TABLE public.agendamentos ALTER COLUMN paciente_id DROP NOT NULL;

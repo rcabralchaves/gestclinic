@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN taxa_antecipacao numeric DEFAULT 0;

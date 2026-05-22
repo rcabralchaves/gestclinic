@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN plano text NOT NULL DEFAULT 'basico';
