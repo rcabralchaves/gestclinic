@@ -57,27 +57,26 @@ const features = [
 const plans = [
   {
     name: "Básico",
-    price: "37",
-    desc: "Ideal para começar a organizar o financeiro da clínica.",
+    price: "59,90",
+    desc: "Para dentistas que querem organizar agenda e pacientes.",
     highlight: false,
     badge: null,
     features: [
-      "Controle financeiro completo",
-      "Relatórios mensais",
+      "Agenda completa",
+      "Prontuário eletrônico",
       "Visualização de pacientes",
       "Suporte por e-mail",
     ],
   },
   {
     name: "Completo",
-    price: "67",
-    desc: "Gestão total da clínica, do atendimento ao financeiro.",
+    price: "89,90",
+    desc: "Gestão total do consultório, do atendimento ao financeiro.",
     highlight: true,
     badge: "Mais popular",
     features: [
-      "Agenda completa com alertas",
-      "Prontuário eletrônico",
-      "Financeiro completo",
+      "Tudo do plano Básico",
+      "Controle financeiro completo",
       "Parcelamento inteligente",
       "Controle de estoque",
       "Relatórios avançados em PDF",
@@ -89,176 +88,146 @@ const plans = [
 /* ─── MOCKUP DASHBOARD ───────────────────────────────────────────────────── */
 
 function DashboardMockup() {
-  const agenda = [
-    { hora: "08:30", nome: "Maria Silva", proc: "Limpeza", status: "confirmado" },
-    { hora: "09:30", nome: "João Costa", proc: "Clareamento", status: "confirmado" },
-    { hora: "11:00", nome: "Ana Ferreira", proc: "Canal", status: "aguardando" },
-    { hora: "14:00", nome: "Carlos Lima", proc: "Restauração", status: "confirmado" },
+  const retornos = [
+    { nome: "Maria Silva", data: "22/07", diff: 2 },
+    { nome: "João Costa", data: "23/07", diff: 3 },
+    { nome: "Ana Ferreira", data: "18/07", diff: -2 },
   ];
-
-  const bars = [62, 78, 55, 88, 70, 95, 82];
-  const days = ["S", "T", "Q", "Q", "S", "S", "D"];
+  const aniversariantes = [
+    { nome: "Carlos Lima", dia: 20, hoje: true },
+    { nome: "Beatriz Ramos", dia: 24, hoje: false },
+  ];
+  const meses = [
+    { m: "Mar", rec: 32, desp: 18 },
+    { m: "Abr", rec: 41, desp: 22 },
+    { m: "Mai", rec: 36, desp: 20 },
+    { m: "Jun", rec: 48, desp: 25 },
+    { m: "Jul", rec: 39, desp: 14 },
+  ];
+  const maxBar = 48;
 
   return (
-    <div className="relative w-full max-w-2xl mx-auto" style={{ perspective: "1000px" }}>
-      {/* Floating cards */}
-      <div
-        className="absolute -left-8 top-20 bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-3 z-20 animate-float-slow hidden lg:block"
-        style={{ animation: "floatY 4s ease-in-out infinite" }}
-      >
+    <div className="relative w-full max-w-2xl mx-auto">
+      {/* Floating badge — retorno */}
+      <div className="absolute -left-6 top-24 bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-3 z-20 hidden lg:block"
+        style={{ animation: "floatY 4s ease-in-out infinite" }}>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center">
+            <CalendarDays className="h-4 w-4 text-blue-600" />
+          </div>
+          <div>
+            <p className="text-[10px] text-gray-400 leading-none mb-0.5">Para retorno</p>
+            <p className="text-sm font-bold text-gray-900 leading-none">3 pacientes</p>
+          </div>
+        </div>
+      </div>
+      {/* Floating badge — lucro */}
+      <div className="absolute -right-6 top-28 bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-3 z-20 hidden lg:block"
+        style={{ animation: "floatY 4s ease-in-out infinite 2s" }}>
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
             <TrendingUp className="h-4 w-4 text-emerald-600" />
           </div>
           <div>
-            <p className="text-[10px] text-gray-400 leading-none mb-0.5">Receita hoje</p>
-            <p className="text-sm font-bold text-gray-900 leading-none">R$ 1.840</p>
+            <p className="text-[10px] text-gray-400 leading-none mb-0.5">Lucro Jul</p>
+            <p className="text-sm font-bold text-emerald-700 leading-none">R$ 24.600</p>
           </div>
         </div>
       </div>
 
-      <div
-        className="absolute -right-6 top-32 bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-3 z-20 hidden lg:block"
-        style={{ animation: "floatY 4s ease-in-out infinite 1.5s" }}
-      >
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center">
-            <Star className="h-4 w-4 text-blue-600" />
-          </div>
-          <div>
-            <p className="text-[10px] text-gray-400 leading-none mb-0.5">Satisfação</p>
-            <p className="text-sm font-bold text-gray-900 leading-none">98.4%</p>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className="absolute -right-4 bottom-24 bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-3 z-20 hidden lg:block"
-        style={{ animation: "floatY 4s ease-in-out infinite 3s" }}
-      >
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-violet-50 flex items-center justify-center">
-            <Clock className="h-4 w-4 text-violet-600" />
-          </div>
-          <div>
-            <p className="text-[10px] text-gray-400 leading-none mb-0.5">Próxima</p>
-            <p className="text-sm font-bold text-gray-900 leading-none">09:30</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Main dashboard card */}
-      <div
-        className="bg-white rounded-3xl border border-gray-100 shadow-2xl overflow-hidden"
-        style={{ boxShadow: "0 32px 80px -12px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.04)" }}
-      >
-        {/* Top bar */}
-        <div className="flex items-center gap-1.5 px-5 py-3.5 bg-gray-50/80 border-b border-gray-100">
+      {/* Main window */}
+      <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden"
+        style={{ boxShadow: "0 32px 80px -12px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.04)" }}>
+        {/* Browser bar */}
+        <div className="flex items-center gap-1.5 px-5 py-3 bg-gray-50 border-b border-gray-100">
           <div className="w-3 h-3 rounded-full bg-red-400/70" />
           <div className="w-3 h-3 rounded-full bg-amber-400/70" />
           <div className="w-3 h-3 rounded-full bg-green-400/70" />
           <span className="ml-3 text-xs text-gray-400 font-medium">gestclini.com.br — Dashboard</span>
         </div>
 
-        {/* Dashboard body */}
         <div className="p-5 space-y-4">
+          {/* Title */}
+          <div>
+            <p className="text-sm font-bold text-gray-800">Dashboard</p>
+            <p className="text-[10px] text-gray-400">Visão geral do seu consultório</p>
+          </div>
 
-          {/* KPIs */}
-          <div className="grid grid-cols-3 gap-3">
+          {/* 4 StatCards — fiel ao sistema real */}
+          <div className="grid grid-cols-4 gap-2">
             {[
-              { label: "Faturamento", value: "R$ 38.700", icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50", trend: "+12%" },
-              { label: "Pacientes", value: "128", icon: Users, color: "text-blue-600", bg: "bg-blue-50", trend: "+8" },
-              { label: "Consultas hoje", value: "7", icon: CalendarDays, color: "text-violet-600", bg: "bg-violet-50", trend: "3 rest." },
+              { label: "Faturamento Mensal", value: "R$ 38.700", icon: DollarSign, color: "text-blue-600", bg: "bg-blue-50" },
+              { label: "Lucro Líquido", value: "R$ 24.600", icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50" },
+              { label: "Total Despesas", value: "R$ 14.100", icon: TrendingDown, color: "text-amber-600", bg: "bg-amber-50" },
+              { label: "Pacientes", value: "128", icon: Users, color: "text-violet-600", bg: "bg-violet-50" },
             ].map((k) => (
-              <div key={k.label} className="bg-gray-50 rounded-2xl p-3">
-                <div className={`w-7 h-7 rounded-lg ${k.bg} flex items-center justify-center mb-2`}>
-                  <k.icon className={`h-3.5 w-3.5 ${k.color}`} />
+              <div key={k.label} className="bg-gray-50 rounded-xl p-2.5 border border-gray-100">
+                <div className={`w-6 h-6 rounded-lg ${k.bg} flex items-center justify-center mb-1.5`}>
+                  <k.icon className={`h-3 w-3 ${k.color}`} />
                 </div>
-                <p className="text-[10px] text-gray-400 mb-0.5">{k.label}</p>
-                <p className="text-sm font-bold text-gray-900 leading-none">{k.value}</p>
-                <p className={`text-[10px] mt-1 font-medium ${k.color}`}>{k.trend}</p>
+                <p className="text-[8px] text-gray-400 leading-tight mb-0.5">{k.label}</p>
+                <p className={`text-[11px] font-extrabold ${k.color} leading-none`}>{k.value}</p>
               </div>
             ))}
           </div>
 
-          {/* Chart + Agenda */}
-          <div className="grid grid-cols-5 gap-3">
-
-            {/* Mini bar chart */}
-            <div className="col-span-2 bg-gray-50 rounded-2xl p-3">
-              <p className="text-[10px] font-semibold text-gray-500 mb-3">Receita — semana</p>
-              <div className="flex items-end gap-1 h-16">
-                {bars.map((h, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                    <div
-                      className="w-full rounded-sm"
-                      style={{
-                        height: `${h}%`,
-                        background: i === 5 ? "#2563eb" : "#e5e7eb",
-                        borderRadius: 3,
-                      }}
-                    />
-                    <span className="text-[8px] text-gray-400">{days[i]}</span>
-                  </div>
-                ))}
-              </div>
+          {/* Pacientes para retorno */}
+          <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <CalendarDays className="h-3 w-3 text-blue-600" />
+              <p className="text-[10px] font-bold text-blue-700">Pacientes para Retorno</p>
             </div>
-
-            {/* Agenda */}
-            <div className="col-span-3 bg-gray-50 rounded-2xl p-3">
-              <p className="text-[10px] font-semibold text-gray-500 mb-2">Agenda de hoje</p>
-              <div className="space-y-1.5">
-                {agenda.slice(0, 3).map((a) => (
-                  <div key={a.hora} className="flex items-center gap-2 bg-white rounded-lg px-2.5 py-1.5 border border-gray-100">
-                    <span className="text-[9px] font-bold text-gray-400 w-7 flex-shrink-0">{a.hora}</span>
-                    <span className="text-[9px] font-semibold text-gray-700 flex-1 truncate">{a.nome}</span>
-                    <span
-                      className="text-[8px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0"
-                      style={{
-                        background: a.status === "confirmado" ? "#dcfce7" : "#fef9c3",
-                        color: a.status === "confirmado" ? "#16a34a" : "#854d0e",
-                      }}
-                    >
-                      {a.status === "confirmado" ? "✓" : "~"}
-                    </span>
-                  </div>
-                ))}
-              </div>
+            <div className="space-y-1">
+              {retornos.map((r) => (
+                <div key={r.nome} className="flex items-center justify-between bg-white rounded-lg px-2.5 py-1.5 border border-gray-100">
+                  <span className="text-[9px] font-semibold text-gray-700">{r.nome}</span>
+                  <span className="text-[8px]" style={{
+                    background: r.diff < 0 ? "#fee2e2" : "#dbeafe",
+                    color: r.diff < 0 ? "#dc2626" : "#2563eb",
+                    padding: "2px 6px", borderRadius: 6, fontWeight: 600
+                  }}>
+                    {r.diff < 0 ? `${Math.abs(r.diff)}d atrasado` : `em ${r.diff}d`}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Bottom row */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-gray-50 rounded-2xl p-3">
-              <p className="text-[10px] font-semibold text-gray-500 mb-2">Financeiro</p>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <TrendingUp className="h-3 w-3 text-emerald-500" />
-                    <span className="text-[9px] text-gray-500">Receitas</span>
+          {/* Gráfico Receitas vs Despesas + Aniversariantes */}
+          <div className="grid grid-cols-5 gap-3">
+            <div className="col-span-3 bg-gray-50 rounded-xl p-3">
+              <p className="text-[10px] font-bold text-gray-600 mb-3">Receitas vs Despesas</p>
+              <div className="flex items-end gap-2 h-14">
+                {meses.map((m) => (
+                  <div key={m.m} className="flex-1 flex flex-col items-center gap-0.5">
+                    <div className="flex items-end gap-0.5 w-full">
+                      <div className="flex-1 rounded-sm bg-blue-400"
+                        style={{ height: `${(m.rec / maxBar) * 48}px` }} />
+                      <div className="flex-1 rounded-sm bg-amber-300"
+                        style={{ height: `${(m.desp / maxBar) * 48}px` }} />
+                    </div>
+                    <span className="text-[8px] text-gray-400">{m.m}</span>
                   </div>
-                  <span className="text-[9px] font-bold text-emerald-600">R$ 38.700</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <TrendingDown className="h-3 w-3 text-red-400" />
-                    <span className="text-[9px] text-gray-500">Despesas</span>
-                  </div>
-                  <span className="text-[9px] font-bold text-red-500">R$ 14.100</span>
-                </div>
-                <div className="border-t border-gray-200 pt-1.5 flex items-center justify-between">
-                  <span className="text-[9px] font-semibold text-gray-600">Lucro</span>
-                  <span className="text-[9px] font-bold text-blue-600">R$ 24.600</span>
-                </div>
+                ))}
+              </div>
+              <div className="flex gap-3 mt-1.5">
+                <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-sm bg-blue-400"/><span className="text-[8px] text-gray-400">Receitas</span></div>
+                <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-sm bg-amber-300"/><span className="text-[8px] text-gray-400">Despesas</span></div>
               </div>
             </div>
-            <div className="bg-blue-600 rounded-2xl p-3 text-white">
-              <p className="text-[10px] font-semibold text-blue-200 mb-2">Mês em andamento</p>
-              <p className="text-lg font-extrabold leading-none">63%</p>
-              <p className="text-[10px] text-blue-200 mt-0.5">da meta atingida</p>
-              <div className="mt-2 bg-blue-500/50 rounded-full h-1.5">
-                <div className="bg-white rounded-full h-1.5 w-[63%]" />
+            <div className="col-span-2 bg-pink-50/60 rounded-xl p-3 border border-pink-100">
+              <div className="flex items-center gap-1 mb-2">
+                <Activity className="h-3 w-3 text-pink-500" />
+                <p className="text-[10px] font-bold text-pink-700">Aniversariantes</p>
               </div>
+              {aniversariantes.map((a) => (
+                <div key={a.nome} className="flex items-center justify-between bg-white rounded-lg px-2 py-1.5 border border-pink-100 mb-1">
+                  <span className="text-[9px] font-semibold text-gray-700 truncate">{a.nome}</span>
+                  {a.hoje
+                    ? <span className="text-[8px] bg-pink-100 text-pink-600 px-1.5 py-0.5 rounded-full font-bold">🎂 Hoje</span>
+                    : <span className="text-[8px] text-gray-400">Dia {a.dia}</span>}
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -372,13 +341,13 @@ export default function LandingPage() {
 
               {/* Headline */}
               <h1 className="animate-fade-up-2 text-4xl sm:text-6xl lg:text-7xl font-extrabold text-gray-950 tracking-tight leading-tight mb-6" style={{ letterSpacing: "-0.03em" }}>
-                Gerencie sua clínica<br />
+                Menos burocracia.<br />
                 <span style={{
                   background: "linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                 }}>
-                  com precisão.
+                  Mais tempo para atender.
                 </span>
               </h1>
 
@@ -417,19 +386,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── LOGOS / TRUST ── */}
-        <section className="py-12 border-y border-gray-100 bg-gray-50/60">
-          <div className="max-w-5xl mx-auto px-6 text-center">
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-6">
-              Desenvolvido com tecnologias líderes de mercado
-            </p>
-            <div className="flex items-center justify-center gap-10 flex-wrap">
-              {["Supabase", "React", "TypeScript", "Vercel", "Tailwind"].map((t) => (
-                <span key={t} className="text-sm font-semibold text-gray-400">{t}</span>
-              ))}
-            </div>
-          </div>
-        </section>
 
         {/* ── FEATURES ── */}
         <section id="recursos" className="py-24 px-6 bg-white">
@@ -552,8 +508,8 @@ export default function LandingPage() {
 
             <p className="text-center text-sm text-gray-400 mt-8">
               Dúvidas? Fale com a gente pelo e-mail{" "}
-              <a href="mailto:contato@gestclini.com.br" className="text-blue-600 font-medium hover:underline">
-                contato@gestclini.com.br
+              <a href="mailto:gestclin@gmail.com" className="text-blue-600 font-medium hover:underline">
+                gestclin@gmail.com
               </a>
             </p>
           </div>

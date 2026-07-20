@@ -12,14 +12,14 @@ const planos = [
   {
     id: "basico" as const,
     nome: "Básico",
-    preco: "R$ 37/mês",
-    features: ["Controle financeiro", "Relatórios simples", "Visualização de pacientes"],
+    preco: "R$ 59,90/mês",
+    features: ["Agenda", "Prontuário eletrônico", "Visualização de pacientes", "Suporte por e-mail"],
   },
   {
     id: "completo" as const,
     nome: "Completo",
-    preco: "R$ 67/mês",
-    features: ["Agenda completa", "Prontuário eletrônico", "Financeiro completo", "Estoque", "Relatórios avançados"],
+    preco: "R$ 89,90/mês",
+    features: ["Agenda completa", "Prontuário eletrônico", "Financeiro completo", "Estoque", "Relatórios avançados", "Suporte prioritário"],
     destaque: true,
   },
 ];

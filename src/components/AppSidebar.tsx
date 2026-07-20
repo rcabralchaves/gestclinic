@@ -30,13 +30,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, completoOnly: false },
-  { title: "Agenda", url: "/agenda", icon: CalendarDays, completoOnly: true },
-  { title: "Pacientes", url: "/pacientes", icon: Users, completoOnly: true },
-  { title: "Receitas", url: "/receitas", icon: TrendingUp, completoOnly: false },
-  { title: "Despesas", url: "/despesas", icon: TrendingDown, completoOnly: false },
+  { title: "Agenda", url: "/agenda", icon: CalendarDays, completoOnly: false },
+  { title: "Pacientes", url: "/pacientes", icon: Users, completoOnly: false },
+  { title: "Receitas", url: "/receitas", icon: TrendingUp, completoOnly: true },
+  { title: "Despesas", url: "/despesas", icon: TrendingDown, completoOnly: true },
   { title: "Estoque", url: "/estoque", icon: Package, completoOnly: true },
   { title: "Planejamento", url: "/planejamento", icon: Target, completoOnly: true },
-  { title: "Relatórios", url: "/relatorios", icon: FileText, completoOnly: false },
+  { title: "Relatórios", url: "/relatorios", icon: FileText, completoOnly: true },
   { title: "Perfil", url: "/perfil", icon: User, completoOnly: false },
 ];
 

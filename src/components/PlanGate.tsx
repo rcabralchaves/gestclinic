@@ -26,7 +26,7 @@ export function PlanGate({ children }: PlanGateProps) {
         </div>
         <h2 className="text-xl font-heading font-bold">Disponível apenas no plano completo</h2>
         <p className="text-muted-foreground text-sm">
-          Faça upgrade para o plano Completo por R$67/mês e tenha acesso a todas as funcionalidades do GestClini.
+          Faça upgrade para o plano Completo por R$89,90/mês e tenha acesso a todas as funcionalidades do GestClini.
         </p>
         <Link to="/perfil">
           <Button className="gradient-primary text-primary-foreground">

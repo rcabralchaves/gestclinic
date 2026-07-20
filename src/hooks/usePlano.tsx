@@ -5,7 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 export type Plano = "basico" | "completo";
 
 // Features only available on "completo"
-const COMPLETO_ONLY_ROUTES = ["/agenda", "/pacientes", "/estoque", "/planejamento"];
+// Básico includes: agenda, pacientes (prontuário), dashboard, perfil
+// Completo adds: receitas, despesas, estoque, planejamento, relatorios
+const COMPLETO_ONLY_ROUTES = ["/receitas", "/despesas", "/estoque", "/planejamento", "/relatorios"];
 
 export function usePlano() {
   const { user } = useAuth();

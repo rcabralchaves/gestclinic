@@ -33,7 +33,7 @@ export function GestCliniLogo({ className = "", size = "md", variant = "dark" }:
         <svg
           width={c.toothW}
           height={c.toothH}
-          viewBox="0 0 11 13"
+          viewBox="0 0 12 16"
           fill="none"
           style={{
             position: "absolute",
@@ -42,8 +42,9 @@ export function GestCliniLogo({ className = "", size = "md", variant = "dark" }:
             transform: "translateX(-50%)",
           }}
         >
+          {/* Clean tooth: rounded crown + two roots */}
           <path
-            d="M5.5 0.5C4.2 0.5 3.3 1.1 2.8 2C2.3 1.1 1.4 0.5 0.5 0.5C0.5 0.5 0 3 1.5 5C2.2 5.9 2.5 7 2.5 8.5L3 12.5H4L4.5 8.5L5.5 8.5L6.5 8.5L7 12.5H8L8.5 8.5C8.5 7 8.8 5.9 9.5 5C11 3 10.5 0.5 10.5 0.5C9.6 0.5 8.7 1.1 8.2 2C7.7 1.1 6.8 0.5 5.5 0.5Z"
+            d="M6 0C4.3 0 2 1 1 3C0.4 4.2 0 5.5 0 7C0 8.8 1 10 2.5 10.5L3 16H4.5L5 10.5H7L7.5 16H9L9.5 10.5C11 10 12 8.8 12 7C12 5.5 11.6 4.2 11 3C10 1 7.7 0 6 0Z"
             fill={color}
           />
         </svg>
