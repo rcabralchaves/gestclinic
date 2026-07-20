@@ -17,12 +17,17 @@ export default function RedefinirSenha() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Supabase sets the session from the URL hash automatically on load
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
+    // Check if session already active (redirected from recovery email)
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) setReady(true);
+    });
+    // Also listen for the event in case page loads before session is set
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
         setReady(true);
       }
     });
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

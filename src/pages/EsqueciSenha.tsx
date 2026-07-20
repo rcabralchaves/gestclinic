@@ -18,9 +18,7 @@ export default function EsqueciSenha() {
     setError("");
     setLoading(true);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/redefinir-senha`,
-    });
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
 
     if (error) {
       setError("Não foi possível enviar o e-mail. Verifique o endereço e tente novamente.");

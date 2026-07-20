@@ -1,5 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -27,6 +29,19 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Detecta token de recuperação de senha no hash da URL e redireciona para /redefinir-senha
+function RecoveryRedirect() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        navigate("/redefinir-senha", { replace: true });
+      }
+    });
+  }, [navigate]);
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -35,6 +50,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <RecoveryRedirect />
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
