@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { Target, TrendingUp, Plus, Trash2, Edit, Save, Loader2 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { formatCurrency } from "@/lib/mockData";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -20,21 +19,6 @@ interface Meta {
   tipo: string;
 }
 
-const projecao = [
-  { mes: "Mai", valor: 36000 },
-  { mes: "Jun", valor: 38500 },
-  { mes: "Jul", valor: 41000 },
-  { mes: "Ago", valor: 43200 },
-  { mes: "Set", valor: 45800 },
-  { mes: "Out", valor: 48000 },
-];
-
-const fluxoCaixa = [
-  { mes: "Jan", saldo: 16100 },
-  { mes: "Fev", saldo: 20300 },
-  { mes: "Mar", saldo: 16600 },
-  { mes: "Abr", saldo: 22300 },
-];
 
 const Planejamento = () => {
   const { user } = useAuth();
@@ -173,36 +157,20 @@ const Planejamento = () => {
             <TrendingUp className="h-5 w-5 text-success" />
             <h2 className="font-heading font-semibold">Projeção de Faturamento</h2>
           </div>
-          <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={projecao}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(v) => `${v / 1000}k`} />
-                <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
-                <Line type="monotone" dataKey="valor" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ fill: "hsl(var(--primary))", r: 4 }} />
-              </LineChart>
-            </ResponsiveContainer>
+          <div className="h-56 flex flex-col items-center justify-center text-center text-muted-foreground gap-2">
+            <TrendingUp className="h-8 w-8 opacity-30" />
+            <p className="text-sm">Nenhum dado de receita ainda.</p>
+            <p className="text-xs opacity-70">Cadastre receitas para ver a projeção aqui.</p>
           </div>
         </div>
 
         {/* Fluxo de Caixa */}
         <div className="rounded-lg border bg-card p-6 card-shadow">
           <h2 className="font-heading font-semibold mb-4">Fluxo de Caixa</h2>
-          <div className="space-y-4">
-            {fluxoCaixa.map((f) => (
-              <div key={f.mes} className="flex items-center gap-4">
-                <span className="text-sm font-medium w-10">{f.mes}</span>
-                <div className="flex-1 bg-muted rounded-full h-6 overflow-hidden">
-                  <div
-                    className="h-full gradient-primary rounded-full flex items-center justify-end pr-3"
-                    style={{ width: `${(f.saldo / 25000) * 100}%` }}
-                  >
-                    <span className="text-xs font-medium text-primary-foreground">{formatCurrency(f.saldo)}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="h-56 flex flex-col items-center justify-center text-center text-muted-foreground gap-2">
+            <TrendingUp className="h-8 w-8 opacity-30" />
+            <p className="text-sm">Nenhum dado disponível ainda.</p>
+            <p className="text-xs opacity-70">O fluxo de caixa aparecerá conforme receitas e despesas forem registradas.</p>
           </div>
         </div>
       </div>
