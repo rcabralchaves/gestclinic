@@ -21,6 +21,8 @@ import Perfil from "./pages/Perfil";
 import Pacientes from "./pages/Pacientes";
 import PacienteProntuario from "./pages/PacienteProntuario";
 import Agenda from "./pages/Agenda";
+import EsqueciSenha from "./pages/EsqueciSenha";
+import RedefinirSenha from "./pages/RedefinirSenha";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +39,8 @@ const App = () => (
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/cadastro" element={<Cadastro />} />
+              <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+              <Route path="/redefinir-senha" element={<RedefinirSenha />} />
               <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/agenda" element={<PlanGate><Agenda /></PlanGate>} />
