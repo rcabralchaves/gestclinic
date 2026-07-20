@@ -33,11 +33,17 @@ const queryClient = new QueryClient();
 function RecoveryRedirect() {
   const navigate = useNavigate();
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event) => {
+    // Checa o hash imediatamente — o evento Supabase pode disparar antes do listener estar pronto
+    if (window.location.hash.includes("type=recovery")) {
+      navigate("/redefinir-senha", { replace: true });
+      return;
+    }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         navigate("/redefinir-senha", { replace: true });
       }
     });
+    return () => subscription.unsubscribe();
   }, [navigate]);
   return null;
 }
