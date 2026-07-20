@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, CheckCircle2, Crown } from "lucide-react";
+import { Eye, EyeOff, CheckCircle2, Crown, AlertCircle, Info } from "lucide-react";
 
 const planos = [
   {
@@ -24,6 +23,8 @@ const planos = [
   },
 ];
 
+type ErrorState = { type: "email_exists" | "weak_password" | "generic"; message: string } | null;
+
 export default function Cadastro() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,41 +32,53 @@ export default function Cadastro() {
   const [showPassword, setShowPassword] = useState(false);
   const [planoSelecionado, setPlanoSelecionado] = useState<"basico" | "completo">("completo");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<ErrorState>(null);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
     if (password !== confirmPassword) {
-      toast({ title: "Senhas não conferem", variant: "destructive" });
+      setError({ type: "generic", message: "As senhas digitadas não são iguais." });
       return;
     }
 
-    if (password.length < 6) {
-      toast({ title: "A senha deve ter pelo menos 6 caracteres", variant: "destructive" });
+    if (password.length < 8) {
+      setError({ type: "weak_password", message: "A senha deve ter pelo menos 8 caracteres, incluindo letras e números." });
       return;
     }
 
     setLoading(true);
 
-    const { data: signUpData, error } = await supabase.auth.signUp({ email, password });
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
 
-    if (error) {
-      let description = error.message;
-      if (error.message?.includes("weak_password") || error.message?.includes("pwned") || (error as any)?.code === "weak_password") {
-        description = "A senha escolhida é muito fraca ou já foi exposta em vazamentos de dados. Escolha uma senha mais forte e única.";
+    if (signUpError) {
+      const msg = signUpError.message || "";
+      const code = (signUpError as any)?.code || "";
+
+      if (
+        msg.includes("already registered") ||
+        msg.includes("already exists") ||
+        code === "user_already_exists"
+      ) {
+        setError({ type: "email_exists", message: "Este e-mail já possui uma conta no GestClini." });
+      } else if (
+        msg.includes("weak_password") ||
+        msg.includes("pwned") ||
+        code === "weak_password"
+      ) {
+        setError({
+          type: "weak_password",
+          message: "Esta senha foi encontrada em vazamentos de dados e não pode ser usada. Escolha uma senha diferente, com letras, números e símbolos.",
+        });
+      } else {
+        setError({ type: "generic", message: msg || "Não foi possível criar a conta. Tente novamente." });
       }
-      toast({
-        title: "Erro ao criar conta",
-        description,
-        variant: "destructive",
-      });
       setLoading(false);
       return;
     }
 
-    // Create profile with selected plan
     if (signUpData.user) {
       await supabase.from("profiles" as any).insert({
         user_id: signUpData.user.id,
@@ -75,7 +88,6 @@ export default function Cadastro() {
       } as any);
     }
 
-    toast({ title: "Conta criada com sucesso!" });
     navigate("/dashboard", { replace: true });
     setLoading(false);
   };
@@ -99,6 +111,32 @@ export default function Cadastro() {
           </CardHeader>
           <form onSubmit={handleSignUp}>
             <CardContent className="space-y-5">
+              {/* Error banner */}
+              {error && (
+                <div className={`rounded-lg border p-3.5 flex gap-3 items-start text-sm ${
+                  error.type === "email_exists"
+                    ? "bg-blue-50 border-blue-200 text-blue-800"
+                    : "bg-red-50 border-red-200 text-red-800"
+                }`}>
+                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                  <div className="space-y-1">
+                    <p>{error.message}</p>
+                    {error.type === "email_exists" && (
+                      <p>
+                        <Link to="/login" className="font-semibold underline underline-offset-2">
+                          Clique aqui para entrar na sua conta
+                        </Link>
+                      </p>
+                    )}
+                    {error.type === "weak_password" && (
+                      <p className="text-xs opacity-80">
+                        Dica: use pelo menos 8 caracteres com letras maiúsculas, minúsculas, números e um símbolo (ex: @, #, !).
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Plan selection */}
               <div className="space-y-2">
                 <Label>Escolha seu plano</Label>
@@ -141,19 +179,20 @@ export default function Cadastro() {
                   type="email"
                   placeholder="seu@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); setError(null); }}
                   required
                 />
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder="Mínimo 8 caracteres"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => { setPassword(e.target.value); setError(null); }}
                     required
                   />
                   <button
@@ -164,7 +203,12 @@ export default function Cadastro() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                  <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                  <span>Use letras maiúsculas, minúsculas, números e símbolos para uma senha segura.</span>
+                </div>
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirmar senha</Label>
                 <Input
@@ -172,11 +216,12 @@ export default function Cadastro() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Repita a senha"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => { setConfirmPassword(e.target.value); setError(null); }}
                   required
                 />
               </div>
             </CardContent>
+
             <CardFooter className="flex flex-col gap-3">
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Criando conta..." : "Criar conta"}
