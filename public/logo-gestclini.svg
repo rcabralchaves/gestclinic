@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 60" fill="none">
+  <!-- Gest (bold) -->
+  <text x="0" y="46" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="48" font-weight="800" fill="white" letter-spacing="-1">Gest</text>
+  <!-- Clini (light) -->
+  <text x="128" y="46" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="48" font-weight="300" fill="white" letter-spacing="-1">Clini</text>
+  <!-- Tooth icon above the last i -->
+  <g transform="translate(248, 4)">
+    <path d="M8 0C5.2 0 3 1.5 2 3.5C1 1.5 -1.2 0 -4 0C-7.3 0 -10 2.7 -10 6C-10 8 -9 10 -7.5 11.5C-6 13 -5 15 -5 17L-3 22H3L5 17C5 15 6 13 7.5 11.5C9 10 10 8 10 6C10 2.7 7.3 0 4 0Z" fill="white" transform="translate(0, 0) scale(0.9)"/>
+  </g>
+</svg>
