@@ -53,7 +53,7 @@ const Agenda = () => {
   const { procedimentos, addProcedimento, updateProcedimento, getCorByNome } = useProcedimentos();
   const { user } = useAuth();
   const [finalizarAg, setFinalizarAg] = useState<Agendamento | null>(null);
-  const [view, setView] = useState<"dia" | "semana" | "mes">("dia");
+  const [view, setView] = useState<"dia" | "semana" | "mes">("mes");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [openNew, setOpenNew] = useState(false);
   const [openDetail, setOpenDetail] = useState<Agendamento | null>(null);
