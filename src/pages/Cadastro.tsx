@@ -70,11 +70,18 @@ export default function Cadastro() {
       ) {
         setError({
           type: "weak_password",
-          message: "Esta senha foi encontrada em vazamentos de dados e não pode ser usada. Escolha uma senha diferente, com letras, números e símbolos.",
+          message: "Esta senha foi encontrada em vazamentos de dados e não pode ser usada. Escolha uma senha diferente — tente combinar palavras, números e símbolos que só você conhece.",
         });
       } else {
         setError({ type: "generic", message: msg || "Não foi possível criar a conta. Tente novamente." });
       }
+      setLoading(false);
+      return;
+    }
+
+    // Supabase returns no error but empty identities when email already exists
+    if (!signUpData.user || (signUpData.user.identities && signUpData.user.identities.length === 0)) {
+      setError({ type: "email_exists", message: "Este e-mail já possui uma conta no GestClini." });
       setLoading(false);
       return;
     }
