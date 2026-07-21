@@ -17,15 +17,27 @@ export default function RedefinirSenha() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if session already active (redirected from recovery email)
+    // PKCE flow (Supabase padrão atual): o link chega com ?code= na query string.
+    // Precisamos trocar o código por sessão antes de qualquer outra coisa.
+    const code = new URLSearchParams(window.location.search).get("code");
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error: exchangeError }) => {
+        if (exchangeError) {
+          setError("Link inválido ou expirado. Solicite um novo link de redefinição.");
+        } else {
+          setReady(true);
+        }
+      });
+      return;
+    }
+
+    // Implicit/legacy flow: sessão já pode estar ativa (hash-based token).
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) setReady(true);
     });
-    // Also listen for the event in case page loads before session is set
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setReady(true);
-      }
+      if (event === "PASSWORD_RECOVERY") setReady(true);
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -67,8 +79,17 @@ export default function RedefinirSenha() {
             </Link>
           </div>
           <Card>
-            <CardContent className="py-10 text-center text-muted-foreground text-sm">
-              Verificando link de redefinição...
+            <CardContent className="py-10 text-center text-sm">
+              {error ? (
+                <div className="space-y-3">
+                  <p className="text-red-600">{error}</p>
+                  <Link to="/esqueci-senha" className="text-primary underline underline-offset-4 hover:opacity-80">
+                    Solicitar novo link
+                  </Link>
+                </div>
+              ) : (
+                <span className="text-muted-foreground">Verificando link de redefinição...</span>
+              )}
             </CardContent>
           </Card>
         </div>
