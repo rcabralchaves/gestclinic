@@ -1,6 +1,6 @@
 import { Lock } from "lucide-react";
 import { usePlano } from "@/hooks/usePlano";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 interface PlanGateProps {
@@ -8,7 +8,8 @@ interface PlanGateProps {
 }
 
 export function PlanGate({ children }: PlanGateProps) {
-  const { isCompleto, loading } = usePlano();
+  const { canAccess, loading } = usePlano();
+  const { pathname } = useLocation();
 
   if (loading) {
     return (
@@ -18,7 +19,7 @@ export function PlanGate({ children }: PlanGateProps) {
     );
   }
 
-  if (!isCompleto) {
+  if (!canAccess(pathname)) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center max-w-md mx-auto space-y-4">
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">

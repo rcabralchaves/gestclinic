@@ -72,11 +72,11 @@ const App = () => (
                 <Route path="/agenda" element={<PlanGate><Agenda /></PlanGate>} />
                 <Route path="/pacientes" element={<PlanGate><Pacientes /></PlanGate>} />
                 <Route path="/pacientes/:id" element={<PlanGate><PacienteProntuario /></PlanGate>} />
-                <Route path="/receitas" element={<Receitas />} />
-                <Route path="/despesas" element={<Despesas />} />
+                <Route path="/receitas" element={<PlanGate><Receitas /></PlanGate>} />
+                <Route path="/despesas" element={<PlanGate><Despesas /></PlanGate>} />
                 <Route path="/estoque" element={<PlanGate><Estoque /></PlanGate>} />
                 <Route path="/planejamento" element={<PlanGate><Planejamento /></PlanGate>} />
-                <Route path="/relatorios" element={<Relatorios />} />
+                <Route path="/relatorios" element={<PlanGate><Relatorios /></PlanGate>} />
                 <Route path="/perfil" element={<Perfil />} />
               </Route>
               <Route path="*" element={<NotFound />} />

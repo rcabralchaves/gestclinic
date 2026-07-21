@@ -82,8 +82,7 @@ const Perfil = () => {
         user_id: user.id,
         nome: user.email?.split("@")[0] || "",
         email: user.email || "",
-        plano: "basico",
-      } as any, { onConflict: "user_id" });
+      } as any, { onConflict: "user_id", ignoreDuplicates: true });
     }
     setLoading(false);
   }, [user]);

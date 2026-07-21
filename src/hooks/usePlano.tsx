@@ -19,13 +19,19 @@ export function usePlano() {
     // consultar o plano. Evita disparar a query antes do token de sessão
     // estar disponível (race condition que fazia o plano cair para
     // "basico" mesmo quando o usuário tinha plano "completo" no banco).
-    if (authLoading) return;
+    console.log("[usePlano] fetchPlano chamado — authLoading:", authLoading, "| user.id:", user?.id ?? "null");
+    if (authLoading) {
+      console.log("[usePlano] aguardando authLoading...");
+      return;
+    }
 
     if (!user) {
+      console.log("[usePlano] sem usuário autenticado — loading = false");
       setLoading(false);
       return;
     }
 
+    console.log("[usePlano] consultando profiles para user_id:", user.id);
     const { data, error } = await supabase
       .from("profiles")
       .select("plano")
@@ -33,11 +39,13 @@ export function usePlano() {
       .single();
 
     if (error) {
-      // Não mascaramos o erro caindo silenciosamente para "basico":
-      // registramos no console para facilitar o diagnóstico.
-      console.error("usePlano: erro ao carregar plano do usuário:", error);
+      console.error("[usePlano] ERRO ao buscar plano:", error.code, error.message);
     } else if (data) {
-      setPlano((data as any).plano || "basico");
+      const planoRaw = (data as any).plano;
+      console.log("[usePlano] profiles.plano retornado pelo banco:", JSON.stringify(planoRaw));
+      setPlano(planoRaw || "basico");
+    } else {
+      console.warn("[usePlano] profiles retornou data=null sem erro — plano permanece 'basico'");
     }
     setLoading(false);
   }, [user, authLoading]);
@@ -54,6 +62,18 @@ export function usePlano() {
     const base = "/" + route.split("/").filter(Boolean)[0];
     return !COMPLETO_ONLY_ROUTES.includes(base);
   };
+
+  // DEBUG TEMPORÁRIO — remover após diagnóstico
+  console.log("[usePlano] estado atual →", {
+    "user.id": user?.id ?? "null",
+    "authLoading": authLoading,
+    "plano (state)": plano,
+    "loading (state)": loading,
+    "isCompleto": isCompleto,
+    "canAccess('/agenda')": canAccess("/agenda"),
+    "canAccess('/pacientes')": canAccess("/pacientes"),
+    "canAccess('/receitas')": canAccess("/receitas"),
+  });
 
   return { plano, loading, isCompleto, canAccess };
 }
