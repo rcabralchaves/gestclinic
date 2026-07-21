@@ -17,9 +17,12 @@ export default function RedefinirSenha() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // PKCE flow (Supabase padrão atual): o link chega com ?code= na query string.
-    // Precisamos trocar o código por sessão antes de qualquer outra coisa.
-    const code = new URLSearchParams(window.location.search).get("code");
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const tokenHash = params.get("token_hash");
+    const type = params.get("type");
+
+    // PKCE flow: link chega com ?code=xxx (padrão supabase-js com flowType: 'pkce')
     if (code) {
       supabase.auth.exchangeCodeForSession(code).then(({ error: exchangeError }) => {
         if (exchangeError) {
@@ -31,7 +34,19 @@ export default function RedefinirSenha() {
       return;
     }
 
-    // Implicit/legacy flow: sessão já pode estar ativa (hash-based token).
+    // Email OTP flow: novo formato de projetos Supabase — link com ?token_hash=xxx&type=recovery
+    if (tokenHash && type === "recovery") {
+      supabase.auth.verifyOtp({ token_hash: tokenHash, type: "recovery" }).then(({ error: verifyError }) => {
+        if (verifyError) {
+          setError("Link inválido ou expirado. Solicite um novo link de redefinição.");
+        } else {
+          setReady(true);
+        }
+      });
+      return;
+    }
+
+    // Implicit/legacy flow: sessão já ativa (hash-based token) ou evento PASSWORD_RECOVERY
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) setReady(true);
     });
