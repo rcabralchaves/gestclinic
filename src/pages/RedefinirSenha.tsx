@@ -23,7 +23,7 @@ export default function RedefinirSenha() {
     });
     // Also listen for the event in case page loads before session is set
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+      if (event === "PASSWORD_RECOVERY") {
         setReady(true);
       }
     });

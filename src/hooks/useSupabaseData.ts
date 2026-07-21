@@ -158,7 +158,7 @@ export function usePacientesDB() {
         .gte("created_at", new Date(Date.now() - 5000).toISOString())
         .limit(1);
       if (recentes && recentes.length > 0) {
-        console.warn("addPaciente: paciente recém-criado detectado, evitando duplicata", recentes[0]);
+        console.warn("addPaciente: paciente recém-criado detectado, evitando duplicata (id:", recentes[0].id, ")");
         await refetch();
         return mapPacienteFromDB(recentes[0]);
       }
