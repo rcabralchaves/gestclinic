@@ -8,6 +8,7 @@ import { useReceitasDB, useDespesasDB, useEstoqueDB } from "@/hooks/useSupabaseD
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { usePlano } from "@/hooks/usePlano";
 import { supabase } from "@/integrations/supabase/client";
 import { Onboarding } from "@/components/Onboarding";
 
@@ -16,6 +17,7 @@ const ONBOARDING_KEY = (uid: string) => `gestclini_onboarding_v1_${uid}`;
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isCompleto } = usePlano();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Mostra onboarding apenas para novos usuários que nunca configuraram o perfil
@@ -100,7 +102,7 @@ const Dashboard = () => {
     return Object.values(meses).sort((a, b) => a.order - b.order).slice(-6);
   })();
 
-  const stats = [
+  const allStats = [
     {
       label: "Faturamento do Mês",
       value: formatCurrency(faturamentoMensal),
@@ -108,6 +110,7 @@ const Dashboard = () => {
       iconBg: "bg-blue-50 dark:bg-blue-950/40",
       iconColor: "text-blue-600 dark:text-blue-400",
       sub: "Mês atual",
+      completoOnly: true,
     },
     {
       label: "Lucro Líquido",
@@ -116,6 +119,7 @@ const Dashboard = () => {
       iconBg: lucroLiquido >= 0 ? "bg-emerald-50 dark:bg-emerald-950/40" : "bg-red-50 dark:bg-red-950/40",
       iconColor: lucroLiquido >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500",
       sub: "Receitas − Despesas",
+      completoOnly: true,
     },
     {
       label: "Total de Despesas",
@@ -124,6 +128,7 @@ const Dashboard = () => {
       iconBg: "bg-amber-50 dark:bg-amber-950/40",
       iconColor: "text-amber-600 dark:text-amber-400",
       sub: "Mês atual",
+      completoOnly: true,
     },
     {
       label: "Pacientes",
@@ -132,8 +137,10 @@ const Dashboard = () => {
       iconBg: "bg-violet-50 dark:bg-violet-950/40",
       iconColor: "text-violet-600 dark:text-violet-400",
       sub: `${pacientesRetorno.length} com retorno próximo`,
+      completoOnly: false,
     },
   ];
+  const stats = allStats.filter((s) => isCompleto || !s.completoOnly);
 
   return (
     <div className="space-y-6">
@@ -248,8 +255,8 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Receitas vs Despesas */}
-      <div className="rounded-xl border bg-card p-5 card-shadow">
+      {/* Receitas vs Despesas — apenas Completo */}
+      {isCompleto && <div className="rounded-xl border bg-card p-5 card-shadow">
         <h2 className="font-heading font-semibold text-sm mb-4">Receitas vs Despesas — últimos 6 meses</h2>
         {chartData.length === 0 ? (
           <div className="h-56 flex items-center justify-center text-sm text-muted-foreground">
@@ -272,10 +279,10 @@ const Dashboard = () => {
             </ResponsiveContainer>
           </div>
         )}
-      </div>
+      </div>}
 
-      {/* Estoque baixo */}
-      {estoqueBaixo.length > 0 && (
+      {/* Estoque baixo — apenas Completo */}
+      {isCompleto && estoqueBaixo.length > 0 && (
         <div className="rounded-xl border border-amber-200/80 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-800/30 p-4">
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
