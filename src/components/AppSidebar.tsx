@@ -59,8 +59,8 @@ export function AppSidebar() {
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 pb-8">
           {collapsed
-            ? <GestCliniLogo size="sm" variant="light" className="justify-center" />
-            : <GestCliniLogo size="md" variant="light" />
+            ? <GestCliniLogo size="sm" variant="dark" className="justify-center" />
+            : <GestCliniLogo size="md" variant="dark" />
           }
         </div>
 

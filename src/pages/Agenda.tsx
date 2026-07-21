@@ -288,15 +288,18 @@ const Agenda = () => {
     setTituloPessoal("");
   };
 
-  // Mês — gera grid 6 semanas
+  // Mês — gera grid com apenas as semanas que cobrem o mês atual
   const getMonthGrid = () => {
     const y = currentDate.getFullYear();
     const m = currentDate.getMonth();
     const first = new Date(y, m, 1);
+    const last = new Date(y, m + 1, 0);
     const startOffset = first.getDay(); // 0=dom
+    const endOffset = last.getDay() === 6 ? 0 : 6 - last.getDay();
+    const totalDays = startOffset + last.getDate() + endOffset;
     const start = new Date(first);
     start.setDate(start.getDate() - startOffset);
-    return Array.from({ length: 42 }, (_, i) => {
+    return Array.from({ length: totalDays }, (_, i) => {
       const d = new Date(start);
       d.setDate(d.getDate() + i);
       return d;
