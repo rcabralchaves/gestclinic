@@ -45,12 +45,16 @@ export function useProcedimentos() {
   }, [fetchAll]);
 
   const updateProcedimento = useCallback(async (id: string, updates: Partial<{ nome: string; cor: string }>) => {
-    const { error } = await supabase.from("procedimentos" as any).update(updates as any).eq("id", id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase.from("procedimentos" as any).update(updates as any).eq("id", id).eq("user_id", user.id);
     if (!error) await fetchAll();
   }, [fetchAll]);
 
   const deleteProcedimento = useCallback(async (id: string) => {
-    await supabase.from("procedimentos" as any).delete().eq("id", id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("procedimentos" as any).delete().eq("id", id).eq("user_id", user.id);
     await fetchAll();
   }, [fetchAll]);
 

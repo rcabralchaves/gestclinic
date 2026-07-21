@@ -342,6 +342,8 @@ export function useAgendamentosDB() {
   }, [refetch]);
 
   const updateAgendamento = useCallback(async (id: string, updates: Partial<Agendamento>) => {
+    const userId = await getCurrentUserId();
+    if (!userId) return;
     const dbUpdates: any = {};
     if (updates.procedimento !== undefined) {
       // Preserve [PESSOAL] prefix if it's a personal appointment
@@ -351,12 +353,14 @@ export function useAgendamentosDB() {
     if (updates.horaInicio !== undefined) dbUpdates.hora_inicio = updates.horaInicio;
     if (updates.duracao !== undefined) dbUpdates.duracao = updates.duracao;
     if (updates.status !== undefined) dbUpdates.status = updates.status;
-    await supabase.from("agendamentos").update(dbUpdates).eq("id", id);
+    await supabase.from("agendamentos").update(dbUpdates).eq("id", id).eq("user_id", userId);
     await refetch();
   }, [refetch]);
 
   const removeAgendamento = useCallback(async (id: string) => {
-    await supabase.from("agendamentos").delete().eq("id", id);
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+    await supabase.from("agendamentos").delete().eq("id", id).eq("user_id", userId);
     await refetch();
   }, [refetch]);
 
@@ -503,6 +507,8 @@ export function useEstoqueDB() {
   }, [refetch]);
 
   const updateProduto = useCallback(async (id: string, updates: Partial<ProdutoEstoque & { categoria?: string; descricao?: string }>) => {
+    const userId = await getCurrentUserId();
+    if (!userId) return;
     const dbUpdates: any = {};
     if (updates.nome !== undefined) dbUpdates.nome = updates.nome;
     if (updates.categoria !== undefined) dbUpdates.categoria = updates.categoria;
@@ -511,19 +517,21 @@ export function useEstoqueDB() {
     if (updates.minimo !== undefined) dbUpdates.minimo = updates.minimo;
     if (updates.unidade !== undefined) dbUpdates.unidade = updates.unidade;
     if (updates.descricao !== undefined) dbUpdates.descricao = updates.descricao;
-    await supabase.from("estoque").update(dbUpdates).eq("id", id);
+    await supabase.from("estoque").update(dbUpdates).eq("id", id).eq("user_id", userId);
     await refetch();
   }, [refetch]);
 
   const deleteProduto = useCallback(async (id: string) => {
-    await supabase.from("estoque").delete().eq("id", id);
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+    await supabase.from("estoque").delete().eq("id", id).eq("user_id", userId);
     await refetch();
   }, [refetch]);
 
   const addProdutos = useCallback(async (items: { nome: string; categoria?: string; quantidade: number; custoUnitario: number; minimo: number; unidade: string; descricao?: string }[]) => {
     const userId = await getCurrentUserId();
     if (!userId) return { added: 0, updated: 0 };
-    const { data: existing } = await supabase.from("estoque").select("*");
+    const { data: existing } = await supabase.from("estoque").select("*").eq("user_id", userId);
     const existingMap = new Map((existing || []).map((e: any) => [e.nome.toLowerCase().trim(), e]));
 
     const toInsert: any[] = [];
@@ -554,7 +562,7 @@ export function useEstoqueDB() {
 
     if (toInsert.length > 0) await supabase.from("estoque").insert(toInsert as any);
     for (const u of toUpdate) {
-      await supabase.from("estoque").update({ quantidade: u.quantidade, custo_unitario: u.custo_unitario }).eq("id", u.id);
+      await supabase.from("estoque").update({ quantidade: u.quantidade, custo_unitario: u.custo_unitario }).eq("id", u.id).eq("user_id", userId);
     }
     await refetch();
     return { added: toInsert.length, updated: toUpdate.length };
@@ -588,16 +596,20 @@ export function useContratosDB(pacienteId?: string) {
   }, [refetch]);
 
   const updateContrato = useCallback(async (id: string, updates: Partial<{ titulo: string; conteudo: string; assinado: boolean }>) => {
+    const userId = await getCurrentUserId();
+    if (!userId) return;
     const dbUpdates: any = {};
     if (updates.titulo !== undefined) dbUpdates.titulo = updates.titulo;
     if (updates.conteudo !== undefined) dbUpdates.conteudo = updates.conteudo;
     if (updates.assinado !== undefined) dbUpdates.assinado = updates.assinado;
-    await supabase.from("contratos").update(dbUpdates).eq("id", id);
+    await supabase.from("contratos").update(dbUpdates).eq("id", id).eq("user_id", userId);
     await refetch();
   }, [refetch]);
 
   const deleteContrato = useCallback(async (id: string) => {
-    await supabase.from("contratos").delete().eq("id", id);
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+    await supabase.from("contratos").delete().eq("id", id).eq("user_id", userId);
     await refetch();
   }, [refetch]);
 
