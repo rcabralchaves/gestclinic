@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Plus, Calendar, ClipboardList, DollarSign, User,
@@ -9,7 +9,7 @@ import { sendWhatsAppRetorno } from "@/lib/whatsapp";
 import type { Paciente } from "@/lib/mockData";
 import { formatCurrency, formaPagamentoLabels, type Atendimento } from "@/lib/mockData";
 import { usePacientes } from "@/context/PacientesContext";
-import { useReceitasDB, useAgendamentosDB } from "@/hooks/useSupabaseData";
+import { useReceitasDB } from "@/hooks/useSupabaseData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import Anamnese, { type AnamneseRegistro } from "@/components/Anamnese";
 import MapaFacial, { type MarcacaoFacial } from "@/components/MapaFacial";
+import { useAnamnese, useMapaFacial, useFotosProntuario, type FotoProntuario } from "@/hooks/useProntuarioData";
 import Contratos from "@/components/Contratos";
 import DocumentosPDF from "@/components/DocumentosPDF";
 import LucroPorPaciente from "@/components/LucroPorPaciente";
@@ -34,14 +35,13 @@ const PacienteProntuario = () => {
   const navigate = useNavigate();
   const { getPaciente, atendimentos: allAtendimentos, addAtendimento, updateAtendimento, deleteAtendimento, updatePaciente, deletePaciente } = usePacientes();
   const { receitas } = useReceitasDB();
-  const { agendamentos } = useAgendamentosDB();
   const paciente = getPaciente(id || "");
 
   const [openAtendimento, setOpenAtendimento] = useState(false);
   const [openRetorno, setOpenRetorno] = useState(false);
   const [retorno, setRetorno] = useState(paciente?.retorno || null);
-  const [anamneseRegistros, setAnamneseRegistros] = useState<AnamneseRegistro[]>([]);
-  const [marcacoesFaciais, setMarcacoesFaciais] = useState<MarcacaoFacial[]>([]);
+  const { registros: anamneseRegistros, save: saveAnamnese } = useAnamnese(id || "");
+  const { marcacoes: marcacoesFaciais, save: saveMapaFacial } = useMapaFacial(id || "");
   const [defaultTab, setDefaultTab] = useState<string>(isNew ? "dados" : "prontuario");
 
   const [form, setForm] = useState({
@@ -62,11 +62,6 @@ const PacienteProntuario = () => {
   const receitasPaciente = useMemo(
     () => receitas.filter((r) => r.pacienteId === id).sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()),
     [receitas, id]
-  );
-
-  const agendamentosPaciente = useMemo(
-    () => agendamentos.filter((a) => a.pacienteId === id && a.status === "realizado").sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()),
-    [agendamentos, id]
   );
 
   const totalReceita = useMemo(
@@ -156,7 +151,7 @@ const PacienteProntuario = () => {
               <AlertDialogHeader>
                 <AlertDialogTitle>Excluir paciente?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Esta ação é irreversível. Todos os dados relacionados (atendimentos, agendamentos, receitas e contratos) de <strong>{paciente.nome}</strong> serão removidos permanentemente.
+                  O paciente <strong>{paciente.nome}</strong> será arquivado e não aparecerá mais na lista. Os dados clínicos (prontuários, contratos) são preservados no banco de dados por obrigação legal.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -173,7 +168,7 @@ const PacienteProntuario = () => {
                     }
                   }}
                 >
-                  Excluir permanentemente
+                  Arquivar paciente
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -268,8 +263,7 @@ const PacienteProntuario = () => {
         </div>
         <div className="rounded-lg border bg-card p-4 card-shadow">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2"><ClipboardList className="h-4 w-4" /> Atendimentos</div>
-          <p className="text-2xl font-heading font-bold">{atendimentos.length + agendamentosPaciente.length}</p>
-          <p className="text-xs text-muted-foreground mt-1">{agendamentosPaciente.length} consulta(s) finalizada(s)</p>
+          <p className="text-2xl font-heading font-bold">{atendimentos.length}</p>
         </div>
         <div className="rounded-lg border bg-card p-4 card-shadow">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2"><CalendarClock className="h-4 w-4" /> Próximo Retorno</div>
@@ -325,11 +319,11 @@ const PacienteProntuario = () => {
         </TabsContent>
 
         <TabsContent value="anamnese" className="mt-4">
-          <Anamnese pacienteId={id!} pacienteNome={paciente?.nome} registros={anamneseRegistros} onSave={setAnamneseRegistros} />
+          <Anamnese pacienteId={id!} pacienteNome={paciente?.nome} registros={anamneseRegistros} onSave={saveAnamnese} />
         </TabsContent>
 
         <TabsContent value="mapa_facial" className="mt-4">
-          <MapaFacial pacienteId={id!} marcacoes={marcacoesFaciais} onSave={setMarcacoesFaciais} />
+          <MapaFacial pacienteId={id!} marcacoes={marcacoesFaciais} onSave={saveMapaFacial} />
         </TabsContent>
 
         <TabsContent value="contratos" className="mt-4">
@@ -387,25 +381,6 @@ const PacienteProntuario = () => {
             </div>
           </div>
 
-          {/* Consultas finalizadas from agendamentos */}
-          {agendamentosPaciente.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><Calendar className="h-4 w-4" /> Consultas Finalizadas</h3>
-              <div className="space-y-2">
-                {agendamentosPaciente.map((ag) => (
-                  <div key={ag.id} className="rounded-lg border bg-card p-3 card-shadow flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-sm">{ag.procedimento || "Consulta"}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(ag.data).toLocaleDateString("pt-BR")} às {ag.horaInicio}</p>
-                    </div>
-                    <Badge className="bg-success/10 text-success border-success/20 text-xs">
-                      <CheckCircle2 className="h-3 w-3 mr-1" /> Finalizado
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </TabsContent>
       </Tabs>
     </div>
@@ -506,8 +481,6 @@ const EditarPacienteTab = ({ paciente, onSave }: { paciente: Paciente; onSave: (
   );
 };
 
-const FOTOS_KEY = (id: string) => `prontuario_fotos_${id}`;
-
 const AtendimentoCard = ({ atendimento, numero, onSave, onMarcarRealizado, onDelete }: { atendimento: Atendimento; numero?: number; onSave: (updates: Partial<Atendimento>) => Promise<void>; onMarcarRealizado: () => void; onDelete: () => void | Promise<void> }) => {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -519,36 +492,21 @@ const AtendimentoCard = ({ atendimento, numero, onSave, onMarcarRealizado, onDel
     formaPagamento: atendimento.formaPagamento || "pix",
   });
 
-  const [fotos, setFotos] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem(FOTOS_KEY(atendimento.id)) || "[]"); } catch { return []; }
-  });
+  const { fotos, uploading: fotosUploading, addFoto, removeFoto } = useFotosProntuario(atendimento.id);
   const [fotoAmpliada, setFotoAmpliada] = useState<string | null>(null);
   const fotoRef = useRef<HTMLInputElement>(null);
 
-  const handleAddFoto = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAddFoto = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const url = ev.target?.result as string;
-        setFotos((prev) => {
-          const updated = [...prev, url];
-          localStorage.setItem(FOTOS_KEY(atendimento.id), JSON.stringify(updated));
-          return updated;
-        });
-      };
-      reader.readAsDataURL(file);
-    });
+    for (const file of files) {
+      try { await addFoto(file); } catch { /* toast mostrado pelo chamador */ }
+    }
     e.target.value = "";
-  }, [atendimento.id]);
+  }, [addFoto]);
 
-  const handleRemoveFoto = useCallback((idx: number) => {
-    setFotos((prev) => {
-      const updated = prev.filter((_, i) => i !== idx);
-      localStorage.setItem(FOTOS_KEY(atendimento.id), JSON.stringify(updated));
-      return updated;
-    });
-  }, [atendimento.id]);
+  const handleRemoveFoto = useCallback(async (foto: FotoProntuario) => {
+    await removeFoto(foto);
+  }, [removeFoto]);
 
   if (editing) {
     return (
@@ -665,23 +623,23 @@ const AtendimentoCard = ({ atendimento, numero, onSave, onMarcarRealizado, onDel
       <div className="mt-3 pt-3 border-t" onClick={(e) => e.stopPropagation()}>
         {fotos.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-2">
-            {fotos.map((src, idx) => (
-              <div key={idx} className="relative group">
+            {fotos.map((foto, idx) => (
+              <div key={foto.id} className="relative group">
                 <img
-                  src={src}
+                  src={foto.url}
                   alt={`Foto ${idx + 1}`}
                   className="h-20 w-20 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => setFotoAmpliada(src)}
+                  onClick={() => setFotoAmpliada(foto.url)}
                 />
                 <button
                   className="absolute -top-1.5 -right-1.5 hidden group-hover:flex bg-destructive text-destructive-foreground rounded-full p-0.5"
-                  onClick={() => handleRemoveFoto(idx)}
+                  onClick={() => handleRemoveFoto(foto)}
                 >
                   <XIcon className="h-3 w-3" />
                 </button>
                 <button
                   className="absolute bottom-1 right-1 hidden group-hover:flex bg-black/50 text-white rounded p-0.5"
-                  onClick={() => setFotoAmpliada(src)}
+                  onClick={() => setFotoAmpliada(foto.url)}
                 >
                   <ZoomIn className="h-3 w-3" />
                 </button>
@@ -690,8 +648,8 @@ const AtendimentoCard = ({ atendimento, numero, onSave, onMarcarRealizado, onDel
           </div>
         )}
         <input ref={fotoRef} type="file" accept="image/*" multiple className="hidden" onChange={handleAddFoto} />
-        <Button size="sm" variant="outline" onClick={() => fotoRef.current?.click()} className="text-xs h-7 gap-1.5">
-          <Camera className="h-3.5 w-3.5" /> {fotos.length === 0 ? "Adicionar foto" : "Adicionar mais fotos"}
+        <Button size="sm" variant="outline" onClick={() => fotoRef.current?.click()} disabled={fotosUploading} className="text-xs h-7 gap-1.5">
+          <Camera className="h-3.5 w-3.5" /> {fotosUploading ? "Salvando..." : fotos.length === 0 ? "Adicionar foto" : "Adicionar mais fotos"}
         </Button>
       </div>
     </div>
