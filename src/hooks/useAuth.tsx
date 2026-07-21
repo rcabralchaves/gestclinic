@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -19,21 +19,49 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  // Só liberamos o app (loading = false) depois que a sessão inicial do
+  // Supabase (getSession) terminar de carregar. Isso evita a race condition
+  // em que os hooks de dados (usePlano, useSupabaseTable) disparavam
+  // consultas antes do token de sessão estar disponível, fazendo as
+  // queries saírem como se fossem anônimas.
+  const initialSessionLoadedRef = useRef(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setLoading(false);
-      }
-    );
+    let mounted = true;
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      initialSessionLoadedRef.current = true;
       setSession(session);
+      setLoading(false);
+    }).catch((error) => {
+      console.error("useAuth: erro ao carregar sessão inicial do Supabase:", error);
+      if (!mounted) return;
+      initialSessionLoadedRef.current = true;
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        // Adiamos a atualização de estado para fora do callback síncrono
+        // do GoTrue (recomendação oficial da Supabase), evitando condições
+        // de corrida com o próprio cliente Supabase.
+        setTimeout(() => {
+          if (!mounted) return;
+          setSession(session);
+          // Só marcamos loading = false aqui se a checagem inicial já
+          // tiver concluído, para não liberar o app antes da hora.
+          if (initialSessionLoadedRef.current) {
+            setLoading(false);
+          }
+        }, 0);
+      }
+    );
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
