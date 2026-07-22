@@ -24,7 +24,7 @@ const ONBOARDING_KEY = (uid: string) => `gestclini_onboarding_v1_${uid}`;
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isCompleto } = usePlano();
+  const { isCompleto, loading: planoLoading, plano } = usePlano();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [periodoBasico, setPeriodoBasico] = useState<PeriodoBasico>("mes");
 
@@ -183,8 +183,15 @@ const Dashboard = () => {
         </p>
       </div>
 
+      {/* DEBUG TEMPORÁRIO — remover após confirmação */}
+      {!planoLoading && (
+        <div className="text-xs text-muted-foreground border rounded px-3 py-2">
+          DEBUG plano: <strong>{plano}</strong> | isCompleto: <strong>{String(isCompleto)}</strong>
+        </div>
+      )}
+
       {/* Card "Total gerado" — apenas Plano Básico */}
-      {!isCompleto && (
+      {!planoLoading && !isCompleto && (
         <div className="rounded-xl border bg-card p-5 card-shadow">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -319,7 +326,7 @@ const Dashboard = () => {
       </div>
 
       {/* Receitas vs Despesas — apenas Completo */}
-      {isCompleto && <div className="rounded-xl border bg-card p-5 card-shadow">
+      {!planoLoading && isCompleto && <div className="rounded-xl border bg-card p-5 card-shadow">
         <h2 className="font-heading font-semibold text-sm mb-4">Receitas vs Despesas — últimos 6 meses</h2>
         {chartData.length === 0 ? (
           <div className="h-56 flex items-center justify-center text-sm text-muted-foreground">
@@ -345,7 +352,7 @@ const Dashboard = () => {
       </div>}
 
       {/* Estoque baixo — apenas Completo */}
-      {isCompleto && estoqueBaixo.length > 0 && (
+      {!planoLoading && isCompleto && estoqueBaixo.length > 0 && (
         <div className="rounded-xl border border-amber-200/80 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-800/30 p-4">
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
