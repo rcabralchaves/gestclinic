@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { jsPDF } from "jspdf";
 import { FileText, Download, Pill, FileCheck2, ListChecks, FileSignature } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Paciente } from "@/lib/mockData";
+import { COR_CLINICA_KEY, LOGO_CLINICA_KEY } from "@/pages/Perfil";
 
 type DocTipo = "receita" | "atestado" | "recomendacoes" | "declaracao";
 
@@ -25,7 +25,7 @@ interface ProfileData {
 const TIPO_LABELS: Record<DocTipo, string> = {
   receita: "Receita Médica",
   atestado: "Atestado",
-  recomendacoes: "Recomendações",
+  recomendacoes: "Recomendações Pós-Procedimento",
   declaracao: "Declaração de Comparecimento",
 };
 
@@ -41,11 +41,15 @@ const TIPO_PLACEHOLDERS: Record<DocTipo, string> = {
 };
 
 function formatDataExtenso(d: Date) {
-  return d.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+  const clean = hex.replace("#", "");
+  const r = parseInt(clean.substring(0, 2), 16);
+  const g = parseInt(clean.substring(2, 4), 16);
+  const b = parseInt(clean.substring(4, 6), 16);
+  return [isNaN(r) ? 29 : r, isNaN(g) ? 78 : g, isNaN(b) ? 216 : b];
 }
 
 function gerarPDF(opts: {
@@ -53,94 +57,163 @@ function gerarPDF(opts: {
   pacienteNome: string;
   conteudo: string;
   profile: ProfileData;
+  corHex: string;
+  logoBase64: string | null;
 }) {
-  const { tipo, pacienteNome, conteudo, profile } = opts;
+  const { tipo, pacienteNome, conteudo, profile, corHex, logoBase64 } = opts;
+  const [cr, cg, cb] = hexToRgb(corHex);
+
   const doc = new jsPDF({ unit: "mm", format: "a4" });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 20;
-  const contentWidth = pageWidth - margin * 2;
-  let y = margin;
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
+  const ml = 20; // margin left
+  const mr = 20; // margin right
+  const cw = W - ml - mr; // content width
+  let y = 18;
 
-  // Cabeçalho — clínica/profissional
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  const headerNome = profile.consultorio_nome || profile.nome || "Consultório";
-  doc.text(headerNome, pageWidth / 2, y, { align: "center" });
-  y += 6;
+  // ── CABEÇALHO ─────────────────────────────────────────────────────
+  const clinicaNome = profile.consultorio_nome || profile.nome || "Consultório";
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  const headerLines: string[] = [];
-  if (profile.nome && profile.consultorio_nome) headerLines.push(profile.nome);
-  if (profile.especialidade) headerLines.push(profile.especialidade);
-  if (profile.cro) headerLines.push(`CRO: ${profile.cro}`);
-  if (profile.endereco) headerLines.push(profile.endereco);
-  const contato = [profile.telefone, profile.email].filter(Boolean).join(" · ");
-  if (contato) headerLines.push(contato);
-  for (const line of headerLines) {
-    doc.text(line, pageWidth / 2, y, { align: "center" });
-    y += 4.5;
+  if (logoBase64) {
+    // Logo à esquerda, dados à direita
+    const logoH = 18;
+    const logoW = 18;
+    try {
+      doc.addImage(logoBase64, "JPEG", ml, y - 2, logoW, logoH);
+    } catch {
+      // formato não suportado — ignora logo silenciosamente
+    }
+    const textX = ml + logoW + 5;
+    const textW = W - mr - textX;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.setTextColor(30, 30, 30);
+    doc.text(clinicaNome, textX, y + 4, { maxWidth: textW });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    const subLines: string[] = [];
+    if (profile.nome && profile.consultorio_nome) subLines.push(profile.nome);
+    if (profile.especialidade) subLines.push(profile.especialidade);
+    if (profile.cro) subLines.push(`CRO: ${profile.cro}`);
+    if (profile.endereco) subLines.push(profile.endereco);
+    const contato = [profile.telefone, profile.email].filter(Boolean).join("  ·  ");
+    if (contato) subLines.push(contato);
+
+    let sy = y + 9;
+    for (const line of subLines) {
+      doc.text(line, textX, sy, { maxWidth: textW });
+      sy += 4;
+    }
+    y = Math.max(y + logoH + 4, sy + 2);
+  } else {
+    // Sem logo — tudo centralizado
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.setTextColor(30, 30, 30);
+    doc.text(clinicaNome, W / 2, y, { align: "center" });
+    y += 6;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    const subLines: string[] = [];
+    if (profile.nome && profile.consultorio_nome) subLines.push(profile.nome);
+    if (profile.especialidade) subLines.push(profile.especialidade);
+    if (profile.cro) subLines.push(`CRO: ${profile.cro}`);
+    if (profile.endereco) subLines.push(profile.endereco);
+    const contato = [profile.telefone, profile.email].filter(Boolean).join("  ·  ");
+    if (contato) subLines.push(contato);
+    for (const line of subLines) {
+      doc.text(line, W / 2, y, { align: "center" });
+      y += 4.2;
+    }
+    y += 2;
   }
 
-  // Linha separadora
-  y += 2;
-  doc.setDrawColor(180);
-  doc.line(margin, y, pageWidth - margin, y);
+  // ── LINHA COLORIDA DE SEPARAÇÃO ────────────────────────────────────
+  doc.setDrawColor(cr, cg, cb);
+  doc.setLineWidth(1.2);
+  doc.line(ml, y, W - mr, y);
+  doc.setLineWidth(0.2);
   y += 10;
 
-  // Título do documento
+  // ── TÍTULO DO DOCUMENTO ───────────────────────────────────────────
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text(TIPO_LABELS[tipo].toUpperCase(), pageWidth / 2, y, { align: "center" });
+  doc.setFontSize(15);
+  doc.setTextColor(cr, cg, cb);
+  doc.text(TIPO_LABELS[tipo].toUpperCase(), W / 2, y, { align: "center" });
   y += 12;
 
-  // Paciente
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.text("Paciente:", margin, y);
-  doc.setFont("helvetica", "normal");
-  doc.text(pacienteNome, margin + 22, y);
-  y += 8;
+  // ── BLOCO DO PACIENTE ─────────────────────────────────────────────
+  doc.setDrawColor(210, 210, 210);
+  doc.setFillColor(250, 250, 250);
+  const boxH = 14;
+  doc.roundedRect(ml, y - 5, cw, boxH, 2, 2, "FD");
 
-  // Conteúdo
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(11);
-  const linhas = doc.splitTextToSize(conteudo || "", contentWidth);
-  for (const linha of linhas) {
-    if (y > pageHeight - 50) {
-      doc.addPage();
-      y = margin;
-    }
-    doc.text(linha, margin, y);
-    y += 6;
-  }
-
-  // Espaço antes da assinatura
-  y = Math.max(y + 20, pageHeight - 50);
-  if (y > pageHeight - 40) {
-    doc.addPage();
-    y = pageHeight - 50;
-  }
-
-  // Local + data
-  doc.setFontSize(11);
-  doc.text(`${formatDataExtenso(new Date())}`, pageWidth - margin, y, { align: "right" });
-  y += 18;
-
-  // Linha de assinatura
-  doc.setDrawColor(80);
-  const sigWidth = 80;
-  const sigX = (pageWidth - sigWidth) / 2;
-  doc.line(sigX, y, sigX + sigWidth, y);
-  y += 5;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
-  doc.text(profile.nome || "Profissional", pageWidth / 2, y, { align: "center" });
-  y += 4.5;
+  doc.setTextColor(80, 80, 80);
+  doc.text("Paciente:", ml + 4, y + 2);
+
   doc.setFont("helvetica", "normal");
+  doc.setTextColor(30, 30, 30);
+  doc.text(pacienteNome, ml + 28, y + 2);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(120, 120, 120);
+  doc.text(formatDataExtenso(new Date()), W - mr - 4, y + 2, { align: "right" });
+  y += boxH + 6;
+
+  // ── CONTEÚDO ──────────────────────────────────────────────────────
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11);
+  doc.setTextColor(40, 40, 40);
+  const linhas = doc.splitTextToSize(conteudo || "", cw);
+  for (const linha of linhas) {
+    if (y > H - 52) {
+      doc.addPage();
+      y = 20;
+    }
+    doc.text(linha, ml, y);
+    y += 6.5;
+  }
+
+  // ── RODAPÉ / ASSINATURA ───────────────────────────────────────────
+  const footerY = Math.max(y + 20, H - 46);
+  const pageCount = (doc as any).internal.getNumberOfPages();
+  if (footerY > H - 46 && pageCount === (doc as any).internal.getCurrentPageInfo().pageNumber) {
+    doc.addPage();
+    y = H - 46;
+  }
+
+  const fy = footerY > H - 46 ? 20 : footerY;
+
+  // Linha colorida do rodapé
+  doc.setDrawColor(cr, cg, cb);
+  doc.setLineWidth(0.5);
+  doc.line(ml, fy, W - mr, fy);
+  doc.setLineWidth(0.2);
+
+  // Linha de assinatura centralizada
+  const sigW = 75;
+  const sigX = (W - sigW) / 2;
+  doc.setDrawColor(80, 80, 80);
+  doc.line(sigX, fy + 16, sigX + sigW, fy + 16);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(30, 30, 30);
+  doc.text(profile.nome || "Profissional", W / 2, fy + 21, { align: "center" });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(80, 80, 80);
   if (profile.cro) {
-    doc.text(`CRO: ${profile.cro}`, pageWidth / 2, y, { align: "center" });
+    doc.text(`CRO: ${profile.cro}`, W / 2, fy + 26, { align: "center" });
   }
 
   const safeNome = pacienteNome.replace(/[^\p{L}\p{N}]+/gu, "_").slice(0, 40);
@@ -157,18 +230,27 @@ export default function DocumentosPDF({ paciente }: DocumentosPDFProps) {
   const [tipo, setTipo] = useState<DocTipo | null>(null);
   const [conteudo, setConteudo] = useState("");
   const [open, setOpen] = useState(false);
+  const [corHex, setCorHex] = useState("#1d4ed8");
+  const [logoBase64, setLogoBase64] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
       const { data } = await supabase
         .from("profiles")
         .select("nome, cro, especialidade, consultorio_nome, endereco, telefone, email")
         .eq("user_id", user.id)
         .maybeSingle();
       if (mounted && data) setProfile(data as ProfileData);
+
+      const cor = localStorage.getItem(COR_CLINICA_KEY(user.id));
+      if (mounted && cor) setCorHex(cor);
+
+      const logo = localStorage.getItem(LOGO_CLINICA_KEY(user.id));
+      if (mounted && logo) setLogoBase64(logo);
     })();
     return () => { mounted = false; };
   }, []);
@@ -186,7 +268,7 @@ export default function DocumentosPDF({ paciente }: DocumentosPDFProps) {
       return;
     }
     try {
-      gerarPDF({ tipo, pacienteNome: paciente.nome, conteudo, profile });
+      gerarPDF({ tipo, pacienteNome: paciente.nome, conteudo, profile, corHex, logoBase64 });
       toast.success("PDF gerado com sucesso!");
       setOpen(false);
     } catch (e) {

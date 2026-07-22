@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { User, Building2, Save, Loader2, CreditCard, Camera } from "lucide-react";
+import { User, Building2, Save, Loader2, CreditCard, Camera, Palette } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,19 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import CustosConsultorioConfig from "@/components/CustosConsultorioConfig";
+
+export const COR_CLINICA_KEY = (uid: string) => `gestclini_cor_clinica_${uid}`;
+const AVATAR_KEY_EXPORT = (uid: string) => `perfil_avatar_${uid}`;
+export { AVATAR_KEY_EXPORT as LOGO_CLINICA_KEY };
+
+const CORES_PRESET = [
+  { label: "Azul", value: "#1d4ed8" },
+  { label: "Verde", value: "#15803d" },
+  { label: "Roxo", value: "#7c3aed" },
+  { label: "Vermelho", value: "#dc2626" },
+  { label: "Cinza", value: "#4b5563" },
+  { label: "Teal", value: "#0f766e" },
+];
 
 const AVATAR_KEY = (userId: string) => `perfil_avatar_${userId}`;
 
@@ -31,6 +44,7 @@ const Perfil = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [avatar, setAvatar] = useState<string | null>(null);
+  const [corClinica, setCorClinica] = useState("#1d4ed8");
   const avatarRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<ProfileData>({
     nome: "",
@@ -95,6 +109,8 @@ const Perfil = () => {
     if (user) {
       const saved = localStorage.getItem(AVATAR_KEY(user.id));
       if (saved) setAvatar(saved);
+      const cor = localStorage.getItem(COR_CLINICA_KEY(user.id));
+      if (cor) setCorClinica(cor);
     }
   }, [user]);
 
@@ -110,6 +126,11 @@ const Perfil = () => {
     };
     reader.readAsDataURL(file);
     e.target.value = "";
+  };
+
+  const handleCorChange = (cor: string) => {
+    setCorClinica(cor);
+    if (user) localStorage.setItem(COR_CLINICA_KEY(user.id), cor);
   };
 
   const handleSave = async () => {
@@ -212,6 +233,44 @@ const Perfil = () => {
             <div><Label>Especialidade principal</Label><Input value={form.especialidade} onChange={(e) => setForm({ ...form, especialidade: e.target.value })} /></div>
             <div><Label>Especialidade secundária</Label><Input value={form.especialidade_secundaria} onChange={(e) => setForm({ ...form, especialidade_secundaria: e.target.value })} /></div>
         </div>
+        </div>
+
+        <Separator />
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Palette className="h-4 w-4 text-primary" />
+            <h3 className="font-heading font-semibold text-sm">Identidade Visual</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">Esta cor é utilizada nos documentos gerados (receitas, atestados, declarações). Ela aparece em detalhes como linhas, título e rodapé — o documento continua predominantemente branco para facilitar a impressão.</p>
+          <div className="space-y-3">
+            <Label>Cor Principal da Clínica</Label>
+            <div className="flex flex-wrap gap-2">
+              {CORES_PRESET.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  title={c.label}
+                  onClick={() => handleCorChange(c.value)}
+                  className={`h-8 w-8 rounded-full border-2 transition-transform hover:scale-110 ${corClinica === c.value ? "border-foreground scale-110" : "border-transparent"}`}
+                  style={{ backgroundColor: c.value }}
+                />
+              ))}
+              <div className="relative">
+                <input
+                  type="color"
+                  value={corClinica}
+                  onChange={(e) => handleCorChange(e.target.value)}
+                  className="h-8 w-8 cursor-pointer rounded-full border-2 border-dashed border-muted-foreground/50 p-0.5 bg-transparent"
+                  title="Escolher cor personalizada"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="h-4 w-4 rounded-full border" style={{ backgroundColor: corClinica }} />
+              Cor selecionada: <span className="font-mono">{corClinica}</span>
+            </div>
+          </div>
         </div>
 
         <Separator />
