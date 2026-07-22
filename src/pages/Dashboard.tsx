@@ -24,7 +24,7 @@ const ONBOARDING_KEY = (uid: string) => `gestclini_onboarding_v1_${uid}`;
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isCompleto, loading: planoLoading, plano } = usePlano();
+  const { isCompleto, loading: planoLoading } = usePlano();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [periodoBasico, setPeriodoBasico] = useState<PeriodoBasico>("mes");
 
@@ -183,46 +183,6 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {/* DEBUG TEMPORÁRIO — remover após confirmação */}
-      {!planoLoading && (
-        <div className="text-xs text-muted-foreground border rounded px-3 py-2">
-          DEBUG plano: <strong>{plano}</strong> | isCompleto: <strong>{String(isCompleto)}</strong>
-        </div>
-      )}
-
-      {/* Card "Total gerado" — apenas Plano Básico */}
-      {!planoLoading && !isCompleto && (
-        <div className="rounded-xl border bg-card p-5 card-shadow">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/40">
-                <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Total gerado</p>
-                <p className="text-2xl font-heading font-bold text-foreground leading-tight">{formatCurrency(totalGerado)}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Atendimentos realizados</p>
-              </div>
-            </div>
-            <div className="flex gap-1 flex-wrap">
-              {PERIODOS.map((p) => (
-                <button
-                  key={p.value}
-                  onClick={() => setPeriodoBasico(p.value)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                    periodoBasico === p.value
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (
@@ -324,6 +284,39 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+
+      {/* Card "Total gerado" — apenas Plano Básico */}
+      {!planoLoading && !isCompleto && (
+        <div className="rounded-xl border bg-card p-5 card-shadow">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/40">
+                <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Total gerado</p>
+                <p className="text-2xl font-heading font-bold text-foreground leading-tight">{formatCurrency(totalGerado)}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Atendimentos realizados</p>
+              </div>
+            </div>
+            <div className="flex gap-1 flex-wrap">
+              {PERIODOS.map((p) => (
+                <button
+                  key={p.value}
+                  onClick={() => setPeriodoBasico(p.value)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                    periodoBasico === p.value
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Receitas vs Despesas — apenas Completo */}
       {!planoLoading && isCompleto && <div className="rounded-xl border bg-card p-5 card-shadow">
