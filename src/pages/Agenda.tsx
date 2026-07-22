@@ -233,10 +233,13 @@ const Agenda = () => {
     }
 
     // 4. Create receita with combined service names
+    console.log("[Agenda] handleFinalizarCompleto — ag.procedimento:", JSON.stringify(ag.procedimento));
+    console.log("[Agenda] data.servicos:", JSON.stringify(data.servicos));
     const procedimentoNomes = data.servicos
       .filter((s) => s.nome.trim())
       .map((s) => s.nome.trim())
       .join(", ") || ag.procedimento || "Consulta";
+    console.log("[Agenda] procedimentoNomes:", JSON.stringify(procedimentoNomes));
 
     await addReceita({
       paciente: ag.pacienteNome,
@@ -252,6 +255,16 @@ const Agenda = () => {
     });
 
     // 5. Create atendimento record with observations
+    const atendimentoPayload = {
+      pacienteId: ag.pacienteId,
+      procedimento: procedimentoNomes,
+      observacoes: data.observacoes || "",
+      data: data.data,
+      valor: data.valor,
+      realizado: true,
+      formaPagamento: data.formaPagamento as any,
+    };
+    console.log("[Agenda] addAtendimento payload:", JSON.stringify(atendimentoPayload));
     await addAtendimento({
       pacienteId: ag.pacienteId,
       procedimento: procedimentoNomes,
