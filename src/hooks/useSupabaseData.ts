@@ -141,7 +141,25 @@ async function getCurrentUserId(): Promise<string | null> {
 // ========== Pacientes ==========
 
 export function usePacientesDB() {
-  const { data: pacientes, loading, refetch } = useSupabaseTable("pacientes", mapPacienteFromDB);
+  const { user, loading: authLoading } = useAuth();
+  const [pacientes, setPacientes] = useState<Paciente[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refetch = useCallback(async () => {
+    if (authLoading) return;
+    if (!user) { setPacientes([]); setLoading(false); return; }
+    setLoading(true);
+    const { data: rows, error } = await supabase
+      .from("pacientes")
+      .select("*")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
+    if (error) console.error("Erro ao carregar pacientes:", error);
+    else if (rows) setPacientes(rows.map(mapPacienteFromDB));
+    setLoading(false);
+  }, [authLoading, user]);
+
+  useEffect(() => { refetch(); }, [refetch]);
 
   const addPaciente = useCallback(async (p: Omit<Paciente, "id"> & { id?: string }) => {
     const userId = await getCurrentUserId();
@@ -156,6 +174,7 @@ export function usePacientesDB() {
         .eq("user_id", userId)
         .ilike("nome", p.nome.trim())
         .gte("created_at", new Date(Date.now() - 5000).toISOString())
+        .is("deleted_at", null)
         .limit(1);
       if (recentes && recentes.length > 0) {
         console.warn("addPaciente: paciente recém-criado detectado, evitando duplicata (id:", recentes[0].id, ")");
@@ -247,6 +266,9 @@ export function usePacientesDB() {
       console.error("Erro ao arquivar paciente:", error);
       return false;
     }
+    // Remove imediatamente do estado local para que o contexto já esteja
+    // atualizado quando navigate() montar Pacientes.tsx (React 18 batching).
+    setPacientes(prev => prev.filter(p => p.id !== id));
     await refetch();
     return true;
   }, [refetch]);
