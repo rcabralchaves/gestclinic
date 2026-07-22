@@ -12,6 +12,13 @@ import { usePlano } from "@/hooks/usePlano";
 import { supabase } from "@/integrations/supabase/client";
 import { Onboarding } from "@/components/Onboarding";
 
+type PeriodoBasico = "7d" | "15d" | "mes";
+const PERIODOS: { value: PeriodoBasico; label: string }[] = [
+  { value: "7d",  label: "Últimos 7 dias" },
+  { value: "15d", label: "Últimos 15 dias" },
+  { value: "mes", label: "Este mês" },
+];
+
 const ONBOARDING_KEY = (uid: string) => `gestclini_onboarding_v1_${uid}`;
 
 const Dashboard = () => {
@@ -19,6 +26,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { isCompleto } = usePlano();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [periodoBasico, setPeriodoBasico] = useState<PeriodoBasico>("mes");
 
   // Mostra onboarding apenas para novos usuários que nunca configuraram o perfil
   useEffect(() => {
@@ -42,7 +50,7 @@ const Dashboard = () => {
     if (user) localStorage.setItem(ONBOARDING_KEY(user.id), "1");
     setShowOnboarding(false);
   };
-  const { pacientes } = usePacientes();
+  const { pacientes, atendimentos: todosAtendimentos } = usePacientes();
   const { receitas } = useReceitasDB();
   const { despesas } = useDespesasDB();
   const { produtos } = useEstoqueDB();
@@ -58,6 +66,28 @@ const Dashboard = () => {
     .reduce((sum, d) => sum + d.valor, 0);
   const lucroLiquido = faturamentoMensal - totalDespesasMes;
   const estoqueBaixo = produtos.filter((p) => p.quantidade <= p.minimo);
+
+  // "Total gerado" para o Plano Básico — soma atendimentos realizados no período selecionado
+  const totalGerado = (() => {
+    const hoje = new Date();
+    hoje.setHours(23, 59, 59, 999);
+    const inicio = new Date(hoje);
+    if (periodoBasico === "7d") {
+      inicio.setDate(hoje.getDate() - 6);
+    } else if (periodoBasico === "15d") {
+      inicio.setDate(hoje.getDate() - 14);
+    } else {
+      inicio.setDate(1);
+    }
+    inicio.setHours(0, 0, 0, 0);
+    return todosAtendimentos
+      .filter((a) => {
+        if (!a.realizado) return false;
+        const d = new Date(a.data + "T12:00:00");
+        return d >= inicio && d <= hoje;
+      })
+      .reduce((sum, a) => sum + a.valor, 0);
+  })();
 
   const mesAniversario = now.getMonth() + 1;
   const aniversariantes = pacientes
@@ -152,6 +182,39 @@ const Dashboard = () => {
           {now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
         </p>
       </div>
+
+      {/* Card "Total gerado" — apenas Plano Básico */}
+      {!isCompleto && (
+        <div className="rounded-xl border bg-card p-5 card-shadow">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/40">
+                <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Total gerado</p>
+                <p className="text-2xl font-heading font-bold text-foreground leading-tight">{formatCurrency(totalGerado)}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Atendimentos realizados</p>
+              </div>
+            </div>
+            <div className="flex gap-1 flex-wrap">
+              {PERIODOS.map((p) => (
+                <button
+                  key={p.value}
+                  onClick={() => setPeriodoBasico(p.value)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                    periodoBasico === p.value
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
