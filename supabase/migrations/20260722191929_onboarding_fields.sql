@@ -15,5 +15,6 @@ SET
   onboarding_step         = 4,
   onboarding_completed_at = now()
 WHERE
-  trim(coalesce(nome, ''))            != ''
-  AND trim(coalesce(consultorio_nome, '')) != '';
+  onboarding_completed_at IS NULL
+  AND trim(coalesce(nome, ''))             <> ''
+  AND trim(coalesce(consultorio_nome, '')) <> '';
