@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,8 +49,14 @@ const FORMAS_PAGAMENTO = [
 const FinalizarConsultaDialog = ({ open, agendamento, produtos, onClose, onFinalizar }: FinalizarConsultaDialogProps) => {
   const [materiais, setMateriais] = useState<MaterialItem[]>([]);
   const [servicos, setServicos] = useState<ServicoItem[]>([
-    { nome: agendamento?.procedimento || "Consulta", valor: "" },
+    { nome: "", valor: "" },
   ]);
+
+  useEffect(() => {
+    if (agendamento) {
+      setServicos([{ nome: agendamento.procedimento || "Consulta", valor: "" }]);
+    }
+  }, [agendamento]);
   const [formaPagamento, setFormaPagamento] = useState("pix");
   const [parcelas, setParcelas] = useState(1);
   const [antecipar, setAntecipar] = useState(false);
