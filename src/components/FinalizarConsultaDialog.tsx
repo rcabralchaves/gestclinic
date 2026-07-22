@@ -53,11 +53,9 @@ const FinalizarConsultaDialog = ({ open, agendamento, produtos, onClose, onFinal
   ]);
 
   useEffect(() => {
-    console.log("[FCD] useEffect agendamento →", agendamento?.id, "| procedimento:", JSON.stringify(agendamento?.procedimento));
     if (agendamento) {
-      const nome = agendamento.procedimento || "Consulta";
-      console.log("[FCD] setServicos com nome:", JSON.stringify(nome));
-      setServicos([{ nome, valor: "" }]);
+      setServicos([{ nome: agendamento.procedimento || "Consulta", valor: "" }]);
+      setData(agendamento.data || new Date().toISOString().split("T")[0]);
     }
   }, [agendamento]);
   const [formaPagamento, setFormaPagamento] = useState("pix");

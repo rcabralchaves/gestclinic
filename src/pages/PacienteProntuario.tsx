@@ -9,7 +9,7 @@ import { sendWhatsAppRetorno } from "@/lib/whatsapp";
 import type { Paciente } from "@/lib/mockData";
 import { formatCurrency, formaPagamentoLabels, type Atendimento } from "@/lib/mockData";
 import { usePacientes } from "@/context/PacientesContext";
-import { useReceitasDB } from "@/hooks/useSupabaseData";
+import { useReceitasDB, useAgendamentosDB } from "@/hooks/useSupabaseData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,6 +35,7 @@ const PacienteProntuario = () => {
   const navigate = useNavigate();
   const { getPaciente, atendimentos: allAtendimentos, addAtendimento, updateAtendimento, deleteAtendimento, updatePaciente, deletePaciente } = usePacientes();
   const { receitas } = useReceitasDB();
+  const { addAgendamento } = useAgendamentosDB();
   const paciente = getPaciente(id || "");
 
   const [openAtendimento, setOpenAtendimento] = useState(false);
@@ -114,6 +115,16 @@ const PacienteProntuario = () => {
     }
     setRetorno({ data: dataRetorno, tipo: retornoForm.tipo });
     await updatePaciente(id!, { retorno: { data: dataRetorno, tipo: retornoForm.tipo } });
+    await addAgendamento({
+      pacienteId: id!,
+      pacienteNome: paciente!.nome,
+      procedimento: `Retorno - ${paciente!.nome}`,
+      data: dataRetorno,
+      horaInicio: "08:00",
+      duracao: 30,
+      status: "agendado",
+      pessoal: false,
+    });
     setOpenRetorno(false);
     toast.success("Retorno agendado com sucesso!");
   };

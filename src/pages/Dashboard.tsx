@@ -101,11 +101,13 @@ const Dashboard = () => {
       return diaA - diaB;
     });
 
-  const pacientesRetorno = pacientes.filter((p) => {
-    if (!p.retorno) return false;
-    const diffDays = Math.ceil((new Date(p.retorno.data).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    return diffDays <= 15 && diffDays >= -30;
-  });
+  const pacientesRetorno = pacientes
+    .filter((p) => {
+      if (!p.retorno) return false;
+      const diffDays = Math.ceil((new Date(p.retorno.data + "T12:00:00").getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      return diffDays >= -30;
+    })
+    .sort((a, b) => new Date(a.retorno!.data).getTime() - new Date(b.retorno!.data).getTime());
 
   const chartData = (() => {
     const meses: Record<string, { mes: string; receita: number; despesa: number; order: number }> = {};

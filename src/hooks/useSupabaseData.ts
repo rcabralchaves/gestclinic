@@ -235,10 +235,16 @@ export function usePacientesDB() {
     }
     const userId = await getCurrentUserId();
     if (!userId) return false;
-    // Defense-in-depth: filtra por id E user_id (além do RLS).
-    const { error } = await supabase.from("pacientes").delete().eq("id", id).eq("user_id", userId);
+    // Soft delete: preserva dados médicos (obrigação legal CFM/LGPD).
+    // O registro fica no banco com deleted_at preenchido.
+    // A RLS de SELECT filtra deleted_at IS NULL — some da UI, mas não do banco.
+    const { error } = await supabase
+      .from("pacientes")
+      .update({ deleted_at: new Date().toISOString() } as any)
+      .eq("id", id)
+      .eq("user_id", userId);
     if (error) {
-      console.error("Erro ao excluir paciente:", error);
+      console.error("Erro ao arquivar paciente:", error);
       return false;
     }
     await refetch();
@@ -300,11 +306,15 @@ export function useAtendimentosDB() {
     }
     const userId = await getCurrentUserId();
     if (!userId) return false;
-    // Remove receitas vinculadas a este atendimento (best-effort: por paciente + data + valor)
-    // Como não há FK direta, deletamos somente o atendimento. Receitas devem ser geridas separadamente.
-    const { error } = await supabase.from("atendimentos").delete().eq("id", id).eq("user_id", userId);
+    // Soft delete: prontuários médicos devem ser retidos.
+    // O registro permanece no banco — apenas some da UI via RLS SELECT.
+    const { error } = await supabase
+      .from("atendimentos")
+      .update({ deleted_at: new Date().toISOString() } as any)
+      .eq("id", id)
+      .eq("user_id", userId);
     if (error) {
-      console.error("Erro ao excluir atendimento:", error);
+      console.error("Erro ao arquivar atendimento:", error);
       return false;
     }
     await refetch();
