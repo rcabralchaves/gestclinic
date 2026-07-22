@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Paciente } from "@/lib/mockData";
-import { COR_CLINICA_KEY, LOGO_CLINICA_KEY } from "@/pages/Perfil";
+import { COR_CLINICA_KEY, LOGO_CLINICA_KEY } from "@/lib/clinicStorage";
 
 type DocTipo = "receita" | "atestado" | "recomendacoes" | "declaracao";
 

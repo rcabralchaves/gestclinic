@@ -29,15 +29,15 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const menuItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, completoOnly: false },
-  { title: "Agenda", url: "/agenda", icon: CalendarDays, completoOnly: false },
-  { title: "Pacientes", url: "/pacientes", icon: Users, completoOnly: false },
-  { title: "Receitas", url: "/receitas", icon: TrendingUp, completoOnly: true },
-  { title: "Despesas", url: "/despesas", icon: TrendingDown, completoOnly: true },
-  { title: "Estoque", url: "/estoque", icon: Package, completoOnly: true },
-  { title: "Planejamento", url: "/planejamento", icon: Target, completoOnly: true },
-  { title: "Relatórios", url: "/relatorios", icon: FileText, completoOnly: true },
-  { title: "Perfil", url: "/perfil", icon: User, completoOnly: false },
+  { title: "Dashboard",   url: "/dashboard",   icon: LayoutDashboard, completoOnly: false, tour: "dashboard"   },
+  { title: "Agenda",      url: "/agenda",       icon: CalendarDays,    completoOnly: false, tour: "agenda"      },
+  { title: "Pacientes",   url: "/pacientes",    icon: Users,           completoOnly: false, tour: "pacientes"   },
+  { title: "Receitas",    url: "/receitas",     icon: TrendingUp,      completoOnly: true,  tour: "receitas"    },
+  { title: "Despesas",    url: "/despesas",     icon: TrendingDown,    completoOnly: true,  tour: "despesas"    },
+  { title: "Estoque",     url: "/estoque",      icon: Package,         completoOnly: true,  tour: "estoque"     },
+  { title: "Planejamento",url: "/planejamento", icon: Target,          completoOnly: true,  tour: "planejamento"},
+  { title: "Relatórios",  url: "/relatorios",   icon: FileText,        completoOnly: true,  tour: "relatorios"  },
+  { title: "Perfil",      url: "/perfil",       icon: User,            completoOnly: false, tour: "perfil"      },
 ];
 
 export function AppSidebar() {
@@ -73,7 +73,7 @@ export function AppSidebar() {
 
                 if (locked) {
                   return (
-                    <SidebarMenuItem key={item.title}>
+                    <SidebarMenuItem key={item.title} data-tour={item.tour}>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <SidebarMenuButton
@@ -97,7 +97,7 @@ export function AppSidebar() {
                 }
 
                 return (
-                  <SidebarMenuItem key={item.title}>
+                  <SidebarMenuItem key={item.title} data-tour={item.tour}>
                     <SidebarMenuButton
                       asChild
                       className={

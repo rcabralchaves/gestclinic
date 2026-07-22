@@ -9,9 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import CustosConsultorioConfig from "@/components/CustosConsultorioConfig";
 
-export const COR_CLINICA_KEY = (uid: string) => `gestclini_cor_clinica_${uid}`;
-const AVATAR_KEY_EXPORT = (uid: string) => `perfil_avatar_${uid}`;
-export { AVATAR_KEY_EXPORT as LOGO_CLINICA_KEY };
+export { COR_CLINICA_KEY, LOGO_CLINICA_KEY } from "@/lib/clinicStorage";
 
 const CORES_PRESET = [
   { label: "Azul", value: "#1d4ed8" },
@@ -34,6 +32,7 @@ interface ProfileData {
   consultorio_nome: string;
   cnpj: string;
   endereco: string;
+  instagram: string;
   taxa_credito: string;
   taxa_debito: string;
   taxa_antecipacao: string;
@@ -56,6 +55,7 @@ const Perfil = () => {
     consultorio_nome: "",
     cnpj: "",
     endereco: "",
+    instagram: "",
     taxa_credito: "0",
     taxa_debito: "0",
     taxa_antecipacao: "0",
@@ -81,6 +81,7 @@ const Perfil = () => {
         consultorio_nome: d.consultorio_nome || "",
         cnpj: d.cnpj || "",
         endereco: d.endereco || "",
+        instagram: d.instagram || "",
         taxa_credito: String(d.taxa_credito || 0),
         taxa_debito: String(d.taxa_debito || 0),
         taxa_antecipacao: String(d.taxa_antecipacao || 0),
@@ -148,6 +149,7 @@ const Perfil = () => {
         consultorio_nome: form.consultorio_nome,
         cnpj: form.cnpj,
         endereco: form.endereco,
+        instagram: form.instagram,
         taxa_credito: Number(form.taxa_credito) || 0,
         taxa_debito: Number(form.taxa_debito) || 0,
         taxa_antecipacao: Number(form.taxa_antecipacao) || 0,
@@ -232,6 +234,7 @@ const Perfil = () => {
             <div className="sm:col-span-2"><Label>Endereço</Label><Input value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} /></div>
             <div><Label>Especialidade principal</Label><Input value={form.especialidade} onChange={(e) => setForm({ ...form, especialidade: e.target.value })} /></div>
             <div><Label>Especialidade secundária</Label><Input value={form.especialidade_secundaria} onChange={(e) => setForm({ ...form, especialidade_secundaria: e.target.value })} /></div>
+            <div><Label>Instagram (opcional)</Label><Input value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} placeholder="@seuconsultorio" /></div>
         </div>
         </div>
 

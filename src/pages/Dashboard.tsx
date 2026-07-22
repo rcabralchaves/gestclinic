@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { DollarSign, TrendingUp, TrendingDown, AlertTriangle, Users, CalendarClock, Cake, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -7,41 +7,11 @@ import { usePacientes } from "@/context/PacientesContext";
 import { useReceitasDB, useDespesasDB, useEstoqueDB } from "@/hooks/useSupabaseData";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
 import { usePlano } from "@/hooks/usePlano";
-import { supabase } from "@/integrations/supabase/client";
-import { Onboarding } from "@/components/Onboarding";
-
-const ONBOARDING_KEY = (uid: string) => `gestclini_onboarding_v1_${uid}`;
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { isCompleto, loading: planoLoading } = usePlano();
-  const [showOnboarding, setShowOnboarding] = useState(false);
-
-  // Mostra onboarding apenas para novos usuários que nunca configuraram o perfil
-  useEffect(() => {
-    if (!user) return;
-    const key = ONBOARDING_KEY(user.id);
-    if (localStorage.getItem(key)) return; // já concluiu
-
-    supabase.from("profiles" as any).select("nome, consultorio_nome").eq("user_id", user.id).single()
-      .then(({ data }) => {
-        const d = data as any;
-        if (d?.nome && d?.consultorio_nome) {
-          // Usuário existente com perfil preenchido — marca como concluído sem exibir
-          localStorage.setItem(key, "1");
-        } else {
-          setShowOnboarding(true);
-        }
-      });
-  }, [user]);
-
-  const handleOnboardingComplete = () => {
-    if (user) localStorage.setItem(ONBOARDING_KEY(user.id), "1");
-    setShowOnboarding(false);
-  };
   const { pacientes, atendimentos: todosAtendimentos } = usePacientes();
   const { receitas } = useReceitasDB();
   const { despesas } = useDespesasDB();
@@ -146,7 +116,6 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      {showOnboarding && <Onboarding onComplete={handleOnboardingComplete} />}
       {/* Header */}
       <div>
         <h1 className="text-2xl font-heading font-bold text-foreground">Dashboard</h1>
