@@ -80,13 +80,20 @@ const Dashboard = () => {
       inicio.setDate(1);
     }
     inicio.setHours(0, 0, 0, 0);
-    return todosAtendimentos
-      .filter((a) => {
-        if (!a.realizado) return false;
-        const d = new Date(a.data + "T12:00:00");
-        return d >= inicio && d <= hoje;
-      })
-      .reduce((sum, a) => sum + a.valor, 0);
+    console.log("[TG] período:", periodoBasico, "| inicio:", inicio.toISOString(), "| hoje:", hoje.toISOString());
+    console.log("[TG] todosAtendimentos.length:", todosAtendimentos.length);
+    todosAtendimentos.forEach((a) => {
+      const d = new Date(a.data + "T12:00:00");
+      const passa = a.realizado && d >= inicio && d <= hoje;
+      console.log(`[TG]   id=${a.id} | data="${a.data}" | realizado=${a.realizado} | valor=${a.valor} | passa=${passa}`);
+    });
+    const filtrados = todosAtendimentos.filter((a) => {
+      if (!a.realizado) return false;
+      const d = new Date(a.data + "T12:00:00");
+      return d >= inicio && d <= hoje;
+    });
+    console.log("[TG] filtrados.length:", filtrados.length, "| soma:", filtrados.reduce((s, a) => s + a.valor, 0));
+    return filtrados.reduce((sum, a) => sum + a.valor, 0);
   })();
 
   const mesAniversario = now.getMonth() + 1;

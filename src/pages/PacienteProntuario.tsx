@@ -115,7 +115,8 @@ const PacienteProntuario = () => {
     }
     setRetorno({ data: dataRetorno, tipo: retornoForm.tipo });
     await updatePaciente(id!, { retorno: { data: dataRetorno, tipo: retornoForm.tipo } });
-    await addAgendamento({
+    console.log("[Retorno] dataRetorno:", dataRetorno);
+    const agResult = await addAgendamento({
       pacienteId: id!,
       pacienteNome: paciente!.nome,
       procedimento: `Retorno - ${paciente!.nome}`,
@@ -125,6 +126,7 @@ const PacienteProntuario = () => {
       status: "agendado",
       pessoal: false,
     });
+    console.log("[Retorno] addAgendamento retornou:", agResult);
     setOpenRetorno(false);
     toast.success("Retorno agendado com sucesso!");
   };

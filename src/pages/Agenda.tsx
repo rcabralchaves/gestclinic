@@ -97,8 +97,15 @@ const Agenda = () => {
     });
   };
 
-  const agendamentosDia = (date: Date) =>
-    agendamentosList.filter((a) => a.data === dateStr(date));
+  const agendamentosDia = (date: Date) => {
+    const key = dateStr(date);
+    const retornos = agendamentosList.filter((a) => a.procedimento?.startsWith("Retorno"));
+    if (retornos.length > 0) {
+      console.log("[Agenda] agendamentos de retorno na lista:", JSON.stringify(retornos.map((a) => ({ id: a.id, data: a.data, proc: a.procedimento }))));
+      console.log("[Agenda] dateStr(date) para o dia navegado:", key);
+    }
+    return agendamentosList.filter((a) => a.data === key);
+  };
 
   const navigate_date = (dir: number) => {
     const d = new Date(currentDate);
