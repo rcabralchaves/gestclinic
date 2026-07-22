@@ -9,6 +9,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PacientesProvider } from "@/context/PacientesContext";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { OnboardingRoute } from "@/components/OnboardingRoute";
 import { PlanGate } from "@/components/PlanGate";
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
@@ -67,6 +68,7 @@ const App = () => (
               <Route path="/cadastro" element={<Cadastro />} />
               <Route path="/esqueci-senha" element={<EsqueciSenha />} />
               <Route path="/redefinir-senha" element={<RedefinirSenha />} />
+              <Route path="/onboarding" element={<OnboardingRoute />} />
               <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/agenda" element={<PlanGate><Agenda /></PlanGate>} />

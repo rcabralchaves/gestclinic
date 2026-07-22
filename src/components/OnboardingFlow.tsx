@@ -1,12 +1,12 @@
 /**
- * OnboardingFlow — fluxo de 4 fases para novos usuários.
+ * OnboardingFlow — configura a clínica antes do primeiro acesso.
+ * Renderizado em /onboarding (sem AppLayout, sem sidebar).
  * Carregado via React.lazy() — zero impacto no bundle de usuários existentes.
  *
  * Fases:
  *   0 → Boas-vindas
  *   1 → Configuração da clínica
- *   2 → Tour guiado (SpotlightTour)
- *   3 → Conclusão  → markComplete()
+ *   2 → Conclusão → onComplete()
  */
 
 import { useState, useEffect, useRef } from "react";
@@ -22,91 +22,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SpotlightTour, type TourStep } from "@/components/ui/SpotlightTour";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { usePlano } from "@/hooks/usePlano";
 import { COR_CLINICA_KEY, LOGO_CLINICA_KEY } from "@/lib/clinicStorage";
 import { cn } from "@/lib/utils";
-
-// ─── Etapas do tour (genérico, reutilizável) ─────────────────────────────────
-
-const TOUR_BASE: TourStep[] = [
-  {
-    target: '[data-tour="dashboard"]',
-    title: "Dashboard",
-    description:
-      "Visão geral do consultório em tempo real: retornos, aniversariantes e desempenho.",
-    placement: "right",
-  },
-  {
-    target: '[data-tour="agenda"]',
-    title: "Agenda",
-    description:
-      "Gerencie todos os seus atendimentos. Agende, visualize e controle os horários.",
-    placement: "right",
-  },
-  {
-    target: '[data-tour="pacientes"]',
-    title: "Pacientes",
-    description:
-      "Cadastre pacientes e acesse o prontuário completo com histórico e documentos.",
-    placement: "right",
-  },
-];
-
-const TOUR_COMPLETO: TourStep[] = [
-  ...TOUR_BASE,
-  {
-    target: '[data-tour="receitas"]',
-    title: "Financeiro",
-    description:
-      "Registre receitas e despesas para acompanhar a saúde financeira do consultório.",
-    placement: "right",
-  },
-  {
-    target: '[data-tour="estoque"]',
-    title: "Estoque",
-    description:
-      "Controle materiais e equipamentos. Receba alertas quando o estoque estiver baixo.",
-    placement: "right",
-  },
-  {
-    target: '[data-tour="relatorios"]',
-    title: "Relatórios",
-    description:
-      "Análises completas de desempenho, faturamento e procedimentos realizados.",
-    placement: "right",
-  },
-  {
-    target: '[data-tour="perfil"]',
-    title: "Perfil",
-    description:
-      "Atualize seus dados, logo e cor da clínica a qualquer momento.",
-    placement: "right",
-  },
-];
-
-const TOUR_BASICO: TourStep[] = [
-  ...TOUR_BASE,
-  {
-    target: '[data-tour="perfil"]',
-    title: "Perfil",
-    description:
-      "Atualize seus dados, logo e cor da clínica a qualquer momento.",
-    placement: "right",
-  },
-];
 
 // ─── Cores predefinidas ───────────────────────────────────────────────────────
 
 const CORES = [
-  { label: "Azul",      value: "#1d4ed8" },
-  { label: "Verde",     value: "#15803d" },
-  { label: "Roxo",      value: "#7c3aed" },
-  { label: "Rosa",      value: "#db2777" },
-  { label: "Teal",      value: "#0f766e" },
-  { label: "Vermelho",  value: "#dc2626" },
+  { label: "Azul",     value: "#1d4ed8" },
+  { label: "Verde",    value: "#15803d" },
+  { label: "Roxo",     value: "#7c3aed" },
+  { label: "Rosa",     value: "#db2777" },
+  { label: "Teal",     value: "#0f766e" },
+  { label: "Vermelho", value: "#dc2626" },
 ];
 
 // ─── Formulário de perfil ─────────────────────────────────────────────────────
@@ -158,28 +87,22 @@ export default function OnboardingFlow({
   onSaveStep,
   onComplete,
 }: OnboardingFlowProps) {
-  // Fase local: 0=boas-vindas, 1=perfil, 2=tour, 3=conclusão
-  const [phase, setPhase] = useState(() => Math.min(initialStep, 3));
-  const [tourStep, setTourStep] = useState(0);
+  // Fase local: 0=boas-vindas, 1=perfil, 2=conclusão
+  const [phase, setPhase] = useState(() => Math.min(initialStep, 2));
   const [saving, setSaving] = useState(false);
   const [finishing, setFinishing] = useState(false);
 
-  // Perfil
   const [form, setForm] = useState<ProfileForm>(EMPTY_FORM);
   const [corClinica, setCorClinica] = useState("#1d4ed8");
   const [logoBase64, setLogoBase64] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const { user } = useAuth();
-  const { isCompleto } = usePlano();
-  const tourSteps = isCompleto ? TOUR_COMPLETO : TOUR_BASICO;
 
-  // Pré-carrega email do usuário
   useEffect(() => {
     if (user?.email) setForm((f) => ({ ...f, email: f.email || user.email! }));
   }, [user]);
 
-  // Carrega cor salva anteriormente (se houver)
   useEffect(() => {
     if (!user) return;
     const cor = localStorage.getItem(COR_CLINICA_KEY(user.id));
@@ -236,48 +159,20 @@ export default function OnboardingFlow({
   const handleFinish = async () => {
     setFinishing(true);
     await onComplete();
-    setFinishing(false);
+    // onComplete() navega para /dashboard via OnboardingRoute
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  // FASE 2: Tour — o SpotlightTour é sobreposto diretamente; o app fica visível por baixo.
-  if (phase === 2) {
-    return (
-      <SpotlightTour
-        steps={tourSteps}
-        currentStep={tourStep}
-        totalFlowSteps={4}
-        flowStepOffset={2}
-        onNext={() => setTourStep((s) => s + 1)}
-        onBack={() => {
-          if (tourStep === 0) goToPhase(1);
-          else setTourStep((s) => s - 1);
-        }}
-        onComplete={() => goToPhase(3)}
-        onSkip={() => goToPhase(3)}
-        completeLabel="Finalizar tour"
-      />
-    );
-  }
-
-  // FASES 0, 1 e 3: overlay opaco (bloqueia totalmente o app abaixo)
   return (
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
-      aria-modal="true"
-    >
-      {/* ── FASE 0: Boas-vindas ────────────────────────────────────────── */}
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-8">
+
+      {/* ── FASE 0: Boas-vindas ──────────────────────────────────────────── */}
       {phase === 0 && (
-        <div
-          key="welcome"
-          className="w-full max-w-md bg-card rounded-2xl shadow-2xl border overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300"
-        >
-          {/* Faixa de progresso */}
-          <ProgressBar current={1} total={4} />
+        <div className="w-full max-w-md bg-card rounded-2xl shadow-2xl border overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300">
+          <ProgressBar current={1} total={3} />
 
           <div className="flex flex-col items-center text-center px-8 py-10 gap-6">
-            {/* Ícone */}
             <div className="relative">
               <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center shadow-lg">
                 <span className="text-primary-foreground font-bold text-3xl font-heading">G</span>
@@ -297,17 +192,13 @@ export default function OnboardingFlow({
               </p>
             </div>
 
-            {/* Destaques */}
             <div className="w-full grid grid-cols-3 gap-3">
               {[
                 { icon: "📅", label: "Agenda inteligente" },
                 { icon: "🦷", label: "Prontuário digital" },
                 { icon: "📊", label: "Financeiro completo" },
               ].map((item) => (
-                <div
-                  key={item.label}
-                  className="rounded-xl border bg-muted/40 p-3 text-center"
-                >
+                <div key={item.label} className="rounded-xl border bg-muted/40 p-3 text-center">
                   <div className="text-xl mb-1">{item.icon}</div>
                   <p className="text-[11px] font-medium text-muted-foreground leading-tight">
                     {item.label}
@@ -326,31 +217,24 @@ export default function OnboardingFlow({
         </div>
       )}
 
-      {/* ── FASE 1: Configuração da clínica ───────────────────────────── */}
+      {/* ── FASE 1: Configuração da clínica ──────────────────────────────── */}
       {phase === 1 && (
-        <div
-          key="profile"
-          className="w-full max-w-lg bg-card rounded-2xl shadow-2xl border overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300"
-        >
-          <ProgressBar current={2} total={4} />
+        <div className="w-full max-w-lg bg-card rounded-2xl shadow-2xl border overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300">
+          <ProgressBar current={2} total={3} />
 
           <div className="px-7 pt-6 pb-7">
-            {/* Cabeçalho */}
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shrink-0">
                 <Building2 className="h-5 w-5 text-primary-foreground" />
               </div>
               <div>
-                <h2 className="font-heading font-bold text-base">
-                  Dados da clínica
-                </h2>
+                <h2 className="font-heading font-bold text-base">Dados da clínica</h2>
                 <p className="text-xs text-muted-foreground">
                   Essas informações aparecem nos documentos gerados
                 </p>
               </div>
             </div>
 
-            {/* Campos obrigatórios */}
             <div className="space-y-4">
               <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">
                 Obrigatórios
@@ -362,9 +246,7 @@ export default function OnboardingFlow({
                   <Input
                     placeholder="Clínica Odontológica Silva"
                     value={form.consultorio_nome}
-                    onChange={(e) =>
-                      setForm({ ...form, consultorio_nome: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, consultorio_nome: e.target.value })}
                     className="mt-1"
                   />
                 </div>
@@ -392,9 +274,7 @@ export default function OnboardingFlow({
                     type="email"
                     placeholder="contato@clinica.com.br"
                     value={form.email}
-                    onChange={(e) =>
-                      setForm({ ...form, email: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
                     className="mt-1"
                   />
                 </div>
@@ -403,15 +283,12 @@ export default function OnboardingFlow({
                   <Input
                     placeholder="(48) 99999-9999"
                     value={form.telefone}
-                    onChange={(e) =>
-                      setForm({ ...form, telefone: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, telefone: e.target.value })}
                     className="mt-1"
                   />
                 </div>
               </div>
 
-              {/* Campos opcionais */}
               <div className="pt-2">
                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold mb-3">
                   Opcionais
@@ -422,9 +299,7 @@ export default function OnboardingFlow({
                     <Input
                       placeholder="Clínica Geral"
                       value={form.especialidade}
-                      onChange={(e) =>
-                        setForm({ ...form, especialidade: e.target.value })
-                      }
+                      onChange={(e) => setForm({ ...form, especialidade: e.target.value })}
                       className="mt-1"
                     />
                   </div>
@@ -433,9 +308,7 @@ export default function OnboardingFlow({
                     <Input
                       placeholder="@clinicasilva"
                       value={form.instagram}
-                      onChange={(e) =>
-                        setForm({ ...form, instagram: e.target.value })
-                      }
+                      onChange={(e) => setForm({ ...form, instagram: e.target.value })}
                       className="mt-1"
                     />
                   </div>
@@ -444,25 +317,18 @@ export default function OnboardingFlow({
                     <Input
                       placeholder="Rua das Flores, 123 — Florianópolis/SC"
                       value={form.endereco}
-                      onChange={(e) =>
-                        setForm({ ...form, endereco: e.target.value })
-                      }
+                      onChange={(e) => setForm({ ...form, endereco: e.target.value })}
                       className="mt-1"
                     />
                   </div>
                 </div>
 
-                {/* Logo */}
                 <div className="mt-3">
                   <Label className="text-xs">Logo da clínica</Label>
                   <div className="mt-1 flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl border bg-muted/40 overflow-hidden flex items-center justify-center shrink-0">
                       {logoBase64 ? (
-                        <img
-                          src={logoBase64}
-                          alt="Logo"
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={logoBase64} alt="Logo" className="w-full h-full object-cover" />
                       ) : (
                         <Building2 className="h-5 w-5 text-muted-foreground" />
                       )}
@@ -485,7 +351,6 @@ export default function OnboardingFlow({
                   </div>
                 </div>
 
-                {/* Cor da clínica */}
                 <div className="mt-3">
                   <Label className="text-xs flex items-center gap-1.5">
                     <Palette className="h-3.5 w-3.5" /> Cor da clínica
@@ -518,14 +383,8 @@ export default function OnboardingFlow({
               </div>
             </div>
 
-            {/* Rodapé */}
             <div className="flex items-center justify-between mt-6 gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => goToPhase(0)}
-                className="text-xs"
-              >
+              <Button variant="ghost" size="sm" onClick={() => goToPhase(0)} className="text-xs">
                 Voltar
               </Button>
               <Button
@@ -536,9 +395,7 @@ export default function OnboardingFlow({
                 {saving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <>
-                    Continuar para o tour <ChevronRight className="h-4 w-4" />
-                  </>
+                  <>Concluir configuração <ChevronRight className="h-4 w-4" /></>
                 )}
               </Button>
             </div>
@@ -546,13 +403,10 @@ export default function OnboardingFlow({
         </div>
       )}
 
-      {/* ── FASE 3: Conclusão ──────────────────────────────────────────── */}
-      {phase === 3 && (
-        <div
-          key="done"
-          className="w-full max-w-md bg-card rounded-2xl shadow-2xl border overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300"
-        >
-          <ProgressBar current={4} total={4} />
+      {/* ── FASE 2: Conclusão ────────────────────────────────────────────── */}
+      {phase === 2 && (
+        <div className="w-full max-w-md bg-card rounded-2xl shadow-2xl border overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300">
+          <ProgressBar current={3} total={3} />
 
           <div className="flex flex-col items-center text-center px-8 py-10 gap-6">
             <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-950/50 flex items-center justify-center">
@@ -564,9 +418,8 @@ export default function OnboardingFlow({
                 Sua clínica está pronta!
               </h2>
               <p className="text-muted-foreground text-sm mt-2 leading-relaxed">
-                Você já conhece o GestClini e tem tudo configurado para
-                começar. Qualquer dado pode ser atualizado em{" "}
-                <strong>Perfil</strong> a qualquer momento.
+                Você já configurou tudo. Ao entrar no sistema, um tour rápido
+                vai apresentar cada seção — leva menos de 2 minutos.
               </p>
             </div>
 
@@ -578,9 +431,7 @@ export default function OnboardingFlow({
               {finishing ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <>
-                  Começar a usar o GestClini <ChevronRight className="h-4 w-4" />
-                </>
+                <>Entrar no GestClini <ChevronRight className="h-4 w-4" /></>
               )}
             </Button>
           </div>

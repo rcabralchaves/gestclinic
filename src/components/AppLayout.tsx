@@ -1,5 +1,6 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { ProductTour } from "@/components/ProductTour";
 import { Outlet } from "react-router-dom";
 
 export function AppLayout() {
@@ -16,6 +17,9 @@ export function AppLayout() {
           </main>
         </div>
       </div>
+      {/* Product Tour: spotlight sobre elementos reais do sidebar, renderizado
+          apenas na primeira entrada após o onboarding */}
+      <ProductTour />
     </SidebarProvider>
   );
 }
