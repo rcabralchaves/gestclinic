@@ -9,7 +9,7 @@ import {
   type Atendimento, type Paciente, type Agendamento,
 } from "@/lib/mockData";
 import { usePacientes } from "@/context/PacientesContext";
-import { useAgendamentosDB, useReceitasDB, usePacientesDB, useEstoqueDB, useAtendimentosDB } from "@/hooks/useSupabaseData";
+import { useAgendamentosDB, useReceitasDB, useEstoqueDB } from "@/hooks/useSupabaseData";
 import { useProcedimentos } from "@/hooks/useProcedimentos";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,11 +44,9 @@ const DAYS_OF_WEEK = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 const Agenda = () => {
   const navigate = useNavigate();
-  const { pacientes, atendimentos: allAtendimentos } = usePacientes();
+  const { pacientes, atendimentos: allAtendimentos, addAtendimento, addPaciente } = usePacientes();
   const { agendamentos: agendamentosList, addAgendamento, updateAgendamento, removeAgendamento } = useAgendamentosDB();
   const { addReceita } = useReceitasDB();
-  const { addAtendimento } = useAtendimentosDB();
-  const { addPaciente, refetch: refetchPacientes } = usePacientesDB();
   const { produtos, updateProduto } = useEstoqueDB();
   const { procedimentos, addProcedimento, updateProcedimento, getCorByNome } = useProcedimentos();
   const { user } = useAuth();
@@ -164,7 +162,6 @@ const Agenda = () => {
       }
       pacienteId = novoPaciente.id;
       pacienteNome = novoPaciente.nome;
-      await refetchPacientes();
       toast.success(`Paciente ${pacienteNome} cadastrado!`);
     }
 
