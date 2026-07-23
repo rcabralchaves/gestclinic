@@ -67,8 +67,8 @@ BEGIN
   ON CONFLICT (user_id) DO NOTHING;
 
   -- ── 2. Cria a subscription em trial ────────────────────────
-  -- trial_expira_em: omitido — usa DEFAULT (now() + interval '14 days')
-  -- definido na migration 20260723210000_subscriptions_trial_default.sql.
+  -- trial_expira_em: omitido — usa DEFAULT (now() + interval '7 days')
+  -- definido em 20260723210000 e alterado para 7 dias em 20260724010000.
   -- ON CONFLICT DO NOTHING: idempotente se já existir subscription ativa.
   INSERT INTO public.subscriptions (
     user_id,

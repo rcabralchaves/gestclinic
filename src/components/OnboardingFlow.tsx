@@ -418,7 +418,7 @@ export default function OnboardingFlow({
 
             <div className="w-full rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-800/40 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-300 text-left">
               Seu teste grátis começou! Aproveite todos os recursos do GestClini
-              durante os próximos 14 dias.
+              durante os próximos 7 dias.
             </div>
 
             <Button
