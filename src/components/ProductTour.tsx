@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { SpotlightTour, type TourStep } from "@/components/ui/SpotlightTour";
 import { useProductTour } from "@/hooks/useProductTour";
-import { usePlano } from "@/hooks/usePlano";
+import { usePlanoUnificado } from "@/hooks/usePlanoUnificado";
 
 const TOUR_BASE: TourStep[] = [
   {
@@ -72,7 +72,7 @@ const TOUR_BASICO: TourStep[] = [
 
 export function ProductTour() {
   const { needsTour, loading, markComplete } = useProductTour();
-  const { isCompleto } = usePlano();
+  const { isCompleto } = usePlanoUnificado();
   const [currentStep, setCurrentStep] = useState(0);
 
   if (loading || !needsTour) return null;
