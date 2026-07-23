@@ -187,77 +187,6 @@ const Perfil = () => {
         <p className="text-muted-foreground mt-1">Configurações do consultório</p>
       </div>
 
-      {/* ── Minha Assinatura ── */}
-      <div className={`rounded-lg border bg-card p-6 card-shadow space-y-4 ${urgente ? "border-amber-400 dark:border-amber-500" : ""}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Crown className="h-4 w-4 text-primary" />
-            <h3 className="font-heading font-semibold text-sm">Minha Assinatura</h3>
-          </div>
-          {assinatura.loading ? (
-            <div className="h-5 w-20 animate-pulse rounded bg-muted" />
-          ) : (
-            <Badge variant={
-              assinatura.isAtivo ? "default" :
-              assinatura.isInadimplente ? "destructive" :
-              "secondary"
-            }>
-              {assinatura.isAtivo && "Ativo"}
-              {assinatura.isTrial && "Teste grátis"}
-              {assinatura.isInadimplente && "Inadimplente"}
-              {!assinatura.isAtivo && !assinatura.isTrial && !assinatura.isInadimplente && "—"}
-            </Badge>
-          )}
-        </div>
-
-        {assinatura.loading ? (
-          <div className="space-y-2">
-            <div className="h-7 w-32 animate-pulse rounded bg-muted" />
-            <div className="h-4 w-48 animate-pulse rounded bg-muted" />
-          </div>
-        ) : (
-          <>
-            <div>
-              <p className="text-2xl font-heading font-bold capitalize">{planoAtual === "completo" ? "Completo" : "Básico"}</p>
-              {assinatura.isTrial && diasRestantes !== null && (
-                <p className={`text-sm mt-1 flex items-center gap-1.5 ${urgente ? "text-amber-600 dark:text-amber-400 font-medium" : "text-muted-foreground"}`}>
-                  <Clock className="h-3.5 w-3.5 shrink-0" />
-                  {diasRestantes === 0
-                    ? "Seu teste termina hoje"
-                    : diasRestantes === 1
-                    ? "Seu teste termina amanhã"
-                    : `Seu teste termina em ${diasRestantes} dias`}
-                  {assinatura.trialExpiraEm && (
-                    <span className="text-xs opacity-70">
-                      ({new Date(assinatura.trialExpiraEm).toLocaleDateString("pt-BR")})
-                    </span>
-                  )}
-                </p>
-              )}
-            </div>
-
-            <Separator />
-
-            <div className="space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Incluso no seu plano</p>
-              <ul className="space-y-1">
-                {beneficios.map((b) => (
-                  <li key={b} className="flex items-center gap-2 text-sm text-foreground">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
-                    {b}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <Button variant="outline" disabled className="w-full sm:w-auto text-sm gap-2 cursor-not-allowed opacity-60">
-              <Crown className="h-4 w-4" />
-              Assinar agora — em breve
-            </Button>
-          </>
-        )}
-      </div>
-
       <div className="rounded-lg border bg-card p-6 card-shadow space-y-6">
         <div className="flex items-center gap-4">
           <div className="relative group">
@@ -386,6 +315,74 @@ const Perfil = () => {
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           {saving ? "Salvando..." : "Salvar Alterações"}
         </Button>
+      </div>
+
+      {/* ── Minha Assinatura ── */}
+      <div className={`rounded-lg border bg-card p-6 card-shadow space-y-4 ${urgente ? "border-amber-400 dark:border-amber-500" : ""}`}>
+        <div className="flex items-center gap-2">
+          <Crown className="h-4 w-4 text-primary" />
+          <h3 className="font-heading font-semibold text-sm">Minha Assinatura</h3>
+        </div>
+
+        {assinatura.loading ? (
+          <div className="space-y-2">
+            <div className="h-7 w-40 animate-pulse rounded bg-muted" />
+            <div className="h-4 w-48 animate-pulse rounded bg-muted" />
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-2">
+              <p className="text-2xl font-heading font-bold">
+                Plano {planoAtual === "completo" ? "Completo" : "Básico"}
+              </p>
+              <Badge variant={
+                assinatura.isAtivo ? "default" :
+                assinatura.isInadimplente ? "destructive" :
+                "secondary"
+              }>
+                {assinatura.isAtivo && "Ativo"}
+                {assinatura.isTrial && "Teste grátis"}
+                {assinatura.isInadimplente && "Inadimplente"}
+                {!assinatura.isAtivo && !assinatura.isTrial && !assinatura.isInadimplente && "—"}
+              </Badge>
+            </div>
+
+            {assinatura.isTrial && diasRestantes !== null && (
+              <p className={`text-sm flex items-center gap-1.5 ${urgente ? "text-amber-600 dark:text-amber-400 font-medium" : "text-muted-foreground"}`}>
+                <Clock className="h-3.5 w-3.5 shrink-0" />
+                {diasRestantes === 0
+                  ? "Seu teste termina hoje"
+                  : diasRestantes === 1
+                  ? "Seu teste termina amanhã"
+                  : `Seu teste termina em ${diasRestantes} dias`}
+                {assinatura.trialExpiraEm && (
+                  <span className="text-xs opacity-70">
+                    ({new Date(assinatura.trialExpiraEm).toLocaleDateString("pt-BR")})
+                  </span>
+                )}
+              </p>
+            )}
+
+            <Separator />
+
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Incluso no seu plano</p>
+              <ul className="space-y-1">
+                {beneficios.map((b) => (
+                  <li key={b} className="flex items-center gap-2 text-sm text-foreground">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                    {b}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <Button variant="outline" disabled className="w-full sm:w-auto text-sm gap-2 cursor-not-allowed opacity-60">
+              <Crown className="h-4 w-4" />
+              Assinar agora — em breve
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );
