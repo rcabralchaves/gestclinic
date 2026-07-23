@@ -14,7 +14,7 @@ import {
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { usePlano } from "@/hooks/usePlano";
+import { usePlanoUnificado } from "@/hooks/usePlanoUnificado";
 import { GestCliniLogo } from "@/components/GestCliniLogo";
 import {
   Sidebar,
@@ -46,7 +46,7 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut } = useAuth();
-  const { isCompleto } = usePlano();
+  const { isCompleto } = usePlanoUnificado();
 
   const handleLogout = async () => {
     await signOut();
