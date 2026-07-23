@@ -57,6 +57,7 @@ export default function Cadastro() {
       password,
       options: {
         data: { plano: planoSelecionado },
+        emailRedirectTo: "https://gestclini.com.br/login",
       },
     });
 
