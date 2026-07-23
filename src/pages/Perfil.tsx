@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { User, Building2, Save, Loader2, CreditCard, Camera, Palette } from "lucide-react";
+import { User, Building2, Save, Loader2, CreditCard, Camera, Palette, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import CustosConsultorioConfig from "@/components/CustosConsultorioConfig";
-
-export { COR_CLINICA_KEY, LOGO_CLINICA_KEY } from "@/lib/clinicStorage";
+import { useClinicBranding } from "@/hooks/useClinicBranding";
 
 const CORES_PRESET = [
   { label: "Azul", value: "#1d4ed8" },
@@ -19,8 +18,6 @@ const CORES_PRESET = [
   { label: "Cinza", value: "#4b5563" },
   { label: "Teal", value: "#0f766e" },
 ];
-
-const AVATAR_KEY = (userId: string) => `perfil_avatar_${userId}`;
 
 interface ProfileData {
   nome: string;
@@ -42,9 +39,8 @@ const Perfil = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [avatar, setAvatar] = useState<string | null>(null);
-  const [corClinica, setCorClinica] = useState("#1d4ed8");
   const avatarRef = useRef<HTMLInputElement>(null);
+  const branding = useClinicBranding();
   const [form, setForm] = useState<ProfileData>({
     nome: "",
     email: "",
@@ -106,32 +102,15 @@ const Perfil = () => {
     fetchProfile();
   }, [fetchProfile]);
 
-  useEffect(() => {
-    if (user) {
-      const saved = localStorage.getItem(AVATAR_KEY(user.id));
-      if (saved) setAvatar(saved);
-      const cor = localStorage.getItem(COR_CLINICA_KEY(user.id));
-      if (cor) setCorClinica(cor);
-    }
-  }, [user]);
-
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const url = ev.target?.result as string;
-      setAvatar(url);
-      if (user) localStorage.setItem(AVATAR_KEY(user.id), url);
-      toast.success("Foto de perfil atualizada!");
-    };
-    reader.readAsDataURL(file);
+    await branding.uploadLogo(file);
     e.target.value = "";
   };
 
   const handleCorChange = (cor: string) => {
-    setCorClinica(cor);
-    if (user) localStorage.setItem(COR_CLINICA_KEY(user.id), cor);
+    branding.updateCor(cor);
   };
 
   const handleSave = async () => {
@@ -164,7 +143,7 @@ const Perfil = () => {
     setSaving(false);
   };
 
-  if (loading) {
+  if (loading || branding.loading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -183,8 +162,8 @@ const Perfil = () => {
         <div className="flex items-center gap-4">
           <div className="relative group">
             <div className="flex h-16 w-16 items-center justify-center rounded-full gradient-primary overflow-hidden">
-              {avatar
-                ? <img src={avatar} alt="Foto de perfil" className="h-full w-full object-cover" />
+              {branding.logoUrl
+                ? <img src={branding.logoUrl} alt="Logo da clínica" className="h-full w-full object-cover" />
                 : <User className="h-8 w-8 text-primary-foreground" />
               }
             </div>
@@ -200,9 +179,16 @@ const Perfil = () => {
           <div>
             <h2 className="font-heading font-semibold text-lg">{form.nome || "Seu nome"}</h2>
             <p className="text-sm text-muted-foreground">{form.especialidade || "Sua especialidade"}</p>
-            <button type="button" onClick={() => avatarRef.current?.click()} className="text-xs text-primary hover:underline mt-0.5">
-              Alterar foto
-            </button>
+            <div className="flex gap-3 mt-0.5">
+              <button type="button" onClick={() => avatarRef.current?.click()} className="text-xs text-primary hover:underline">
+                Alterar logo
+              </button>
+              {branding.logoUrl && (
+                <button type="button" onClick={() => branding.removeLogo()} className="text-xs text-destructive hover:underline flex items-center gap-0.5">
+                  <X className="h-3 w-3" /> Remover
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -255,14 +241,14 @@ const Perfil = () => {
                   type="button"
                   title={c.label}
                   onClick={() => handleCorChange(c.value)}
-                  className={`h-8 w-8 rounded-full border-2 transition-transform hover:scale-110 ${corClinica === c.value ? "border-foreground scale-110" : "border-transparent"}`}
+                  className={`h-8 w-8 rounded-full border-2 transition-transform hover:scale-110 ${branding.corClinica === c.value ? "border-foreground scale-110" : "border-transparent"}`}
                   style={{ backgroundColor: c.value }}
                 />
               ))}
               <div className="relative">
                 <input
                   type="color"
-                  value={corClinica}
+                  value={branding.corClinica}
                   onChange={(e) => handleCorChange(e.target.value)}
                   className="h-8 w-8 cursor-pointer rounded-full border-2 border-dashed border-muted-foreground/50 p-0.5 bg-transparent"
                   title="Escolher cor personalizada"
@@ -270,8 +256,8 @@ const Perfil = () => {
               </div>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="h-4 w-4 rounded-full border" style={{ backgroundColor: corClinica }} />
-              Cor selecionada: <span className="font-mono">{corClinica}</span>
+              <div className="h-4 w-4 rounded-full border" style={{ backgroundColor: branding.corClinica }} />
+              Cor selecionada: <span className="font-mono">{branding.corClinica}</span>
             </div>
           </div>
         </div>

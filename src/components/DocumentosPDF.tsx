@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Paciente } from "@/lib/mockData";
-import { COR_CLINICA_KEY, LOGO_CLINICA_KEY } from "@/lib/clinicStorage";
+import { useClinicBranding } from "@/hooks/useClinicBranding";
 
 type DocTipo = "receita" | "atestado" | "recomendacoes" | "declaracao";
 
@@ -245,8 +245,7 @@ export default function DocumentosPDF({ paciente }: DocumentosPDFProps) {
   const [tipo, setTipo] = useState<DocTipo | null>(null);
   const [conteudo, setConteudo] = useState("");
   const [open, setOpen] = useState(false);
-  const [corHex, setCorHex] = useState("#1d4ed8");
-  const [logoBase64, setLogoBase64] = useState<string | null>(null);
+  const branding = useClinicBranding();
 
   useEffect(() => {
     let mounted = true;
@@ -260,12 +259,6 @@ export default function DocumentosPDF({ paciente }: DocumentosPDFProps) {
         .eq("user_id", user.id)
         .maybeSingle();
       if (mounted && data) setProfile(data as ProfileData);
-
-      const cor = localStorage.getItem(COR_CLINICA_KEY(user.id));
-      if (mounted && cor) setCorHex(cor);
-
-      const logo = localStorage.getItem(LOGO_CLINICA_KEY(user.id));
-      if (mounted && logo) setLogoBase64(logo);
     })();
     return () => { mounted = false; };
   }, []);
@@ -276,14 +269,22 @@ export default function DocumentosPDF({ paciente }: DocumentosPDFProps) {
     setOpen(true);
   };
 
-  const handleGerar = () => {
+  const handleGerar = async () => {
     if (!tipo) return;
     if (!conteudo.trim()) {
       toast.error("Preencha o conteúdo do documento.");
       return;
     }
     try {
-      gerarPDF({ tipo, pacienteNome: paciente.nome, conteudo, profile, corHex, logoBase64 });
+      const logoBase64 = await branding.getLogoBase64();
+      gerarPDF({
+        tipo,
+        pacienteNome: paciente.nome,
+        conteudo,
+        profile,
+        corHex: branding.corClinica,
+        logoBase64,
+      });
       toast.success("PDF gerado com sucesso!");
       setOpen(false);
     } catch (e) {

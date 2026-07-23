@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { COR_CLINICA_KEY, LOGO_CLINICA_KEY } from "@/lib/clinicStorage";
+import { useClinicBranding } from "@/hooks/useClinicBranding";
 import { cn } from "@/lib/utils";
 
 // ─── Cores predefinidas ───────────────────────────────────────────────────────
@@ -93,22 +93,13 @@ export default function OnboardingFlow({
   const [finishing, setFinishing] = useState(false);
 
   const [form, setForm] = useState<ProfileForm>(EMPTY_FORM);
-  const [corClinica, setCorClinica] = useState("#1d4ed8");
-  const [logoBase64, setLogoBase64] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const { user } = useAuth();
+  const branding = useClinicBranding();
 
   useEffect(() => {
     if (user?.email) setForm((f) => ({ ...f, email: f.email || user.email! }));
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) return;
-    const cor = localStorage.getItem(COR_CLINICA_KEY(user.id));
-    if (cor) setCorClinica(cor);
-    const logo = localStorage.getItem(LOGO_CLINICA_KEY(user.id));
-    if (logo) setLogoBase64(logo);
   }, [user]);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
@@ -118,22 +109,15 @@ export default function OnboardingFlow({
     await onSaveStep(next);
   };
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const url = ev.target?.result as string;
-      setLogoBase64(url);
-      if (user) localStorage.setItem(LOGO_CLINICA_KEY(user.id), url);
-    };
-    reader.readAsDataURL(file);
+    await branding.uploadLogo(file);
     e.target.value = "";
   };
 
   const handleCorChange = (cor: string) => {
-    setCorClinica(cor);
-    if (user) localStorage.setItem(COR_CLINICA_KEY(user.id), cor);
+    branding.updateCor(cor);
   };
 
   const handleSaveProfile = async () => {
@@ -327,8 +311,8 @@ export default function OnboardingFlow({
                   <Label className="text-xs">Logo da clínica</Label>
                   <div className="mt-1 flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl border bg-muted/40 overflow-hidden flex items-center justify-center shrink-0">
-                      {logoBase64 ? (
-                        <img src={logoBase64} alt="Logo" className="w-full h-full object-cover" />
+                      {branding.logoUrl ? (
+                        <img src={branding.logoUrl} alt="Logo" className="w-full h-full object-cover" />
                       ) : (
                         <Building2 className="h-5 w-5 text-muted-foreground" />
                       )}
@@ -339,7 +323,7 @@ export default function OnboardingFlow({
                       className="flex items-center gap-2 text-xs text-primary hover:underline"
                     >
                       <Camera className="h-3.5 w-3.5" />
-                      {logoBase64 ? "Trocar logo" : "Enviar logo"}
+                      {branding.logoUrl ? "Trocar logo" : "Enviar logo"}
                     </button>
                     <input
                       ref={logoInputRef}
@@ -364,7 +348,7 @@ export default function OnboardingFlow({
                         onClick={() => handleCorChange(c.value)}
                         className={cn(
                           "w-7 h-7 rounded-full border-2 transition-transform hover:scale-110",
-                          corClinica === c.value
+                          branding.corClinica === c.value
                             ? "border-foreground scale-110 ring-2 ring-offset-1 ring-primary"
                             : "border-transparent",
                         )}
@@ -373,7 +357,7 @@ export default function OnboardingFlow({
                     ))}
                     <input
                       type="color"
-                      value={corClinica}
+                      value={branding.corClinica}
                       onChange={(e) => handleCorChange(e.target.value)}
                       className="w-7 h-7 rounded-full border-2 border-dashed border-muted-foreground/50 cursor-pointer bg-transparent p-0.5"
                       title="Cor personalizada"
