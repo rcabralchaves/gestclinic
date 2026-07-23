@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useClinicBranding } from "@/hooks/useClinicBranding";
+import { useAssinatura } from "@/hooks/useAssinatura";
 import { cn } from "@/lib/utils";
 
 // ─── Cores predefinidas ───────────────────────────────────────────────────────
@@ -96,6 +97,7 @@ export default function OnboardingFlow({
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const { user } = useAuth();
+  const assinatura = useAssinatura();
   const branding = useClinicBranding();
 
   useEffect(() => {
@@ -177,11 +179,18 @@ export default function OnboardingFlow({
             </div>
 
             <div className="w-full grid grid-cols-3 gap-3">
-              {[
-                { icon: "📅", label: "Agenda inteligente" },
-                { icon: "🦷", label: "Prontuário digital" },
-                { icon: "📊", label: "Financeiro completo" },
-              ].map((item) => (
+              {(assinatura.plano === "completo"
+                ? [
+                    { icon: "📅", label: "Agenda inteligente" },
+                    { icon: "🦷", label: "Prontuário digital" },
+                    { icon: "📊", label: "Financeiro completo" },
+                  ]
+                : [
+                    { icon: "📅", label: "Agenda inteligente" },
+                    { icon: "🦷", label: "Prontuário digital" },
+                    { icon: "👥", label: "Gestão de pacientes" },
+                  ]
+              ).map((item) => (
                 <div key={item.label} className="rounded-xl border bg-muted/40 p-3 text-center">
                   <div className="text-xl mb-1">{item.icon}</div>
                   <p className="text-[11px] font-medium text-muted-foreground leading-tight">
@@ -405,6 +414,11 @@ export default function OnboardingFlow({
                 Você já configurou tudo. Ao entrar no sistema, um tour rápido
                 vai apresentar cada seção — leva menos de 2 minutos.
               </p>
+            </div>
+
+            <div className="w-full rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-800/40 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-300 text-left">
+              Seu teste grátis começou! Aproveite todos os recursos do GestClini
+              durante os próximos 14 dias.
             </div>
 
             <Button
