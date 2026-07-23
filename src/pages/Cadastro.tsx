@@ -51,7 +51,13 @@ export default function Cadastro() {
 
     setLoading(true);
 
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { plano: planoSelecionado },
+      },
+    });
 
     if (signUpError) {
       const msg = signUpError.message || "";
@@ -86,24 +92,9 @@ export default function Cadastro() {
       return;
     }
 
-    if (signUpData.user) {
-      const uid = signUpData.user.id;
-
-      await supabase.from("profiles" as any).insert({
-        user_id:          uid,
-        nome:             email.split("@")[0] || "",
-        email:            email,
-        plano:            planoSelecionado,
-        onboarding_step:  0,   // inicia onboarding na primeira entrada
-      } as any);
-
-      await supabase.from("subscriptions" as any).insert({
-        user_id: uid,
-        plano:   planoSelecionado,
-        status:  "trial",
-      } as any);
-    }
-
+    // Profile e subscription são criados automaticamente pelo trigger
+    // trg_on_auth_user_created em auth.users (handle_new_user).
+    // O plano escolhido foi enviado via options.data acima.
     navigate("/dashboard", { replace: true });
     setLoading(false);
   };
