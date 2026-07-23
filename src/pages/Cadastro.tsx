@@ -68,7 +68,7 @@ export default function Cadastro() {
         msg.includes("already exists") ||
         code === "user_already_exists"
       ) {
-        setError({ type: "email_exists", message: "Este e-mail já possui uma conta no GestClini." });
+        setError({ type: "email_exists", message: "Este e-mail já está cadastrado." });
       } else if (
         msg.includes("weak_password") ||
         msg.includes("pwned") ||
@@ -87,7 +87,7 @@ export default function Cadastro() {
 
     // Supabase returns no error but empty identities when email already exists
     if (!signUpData.user || (signUpData.user.identities && signUpData.user.identities.length === 0)) {
-      setError({ type: "email_exists", message: "Este e-mail já possui uma conta no GestClini." });
+      setError({ type: "email_exists", message: "Este e-mail já está cadastrado." });
       setLoading(false);
       return;
     }
@@ -129,11 +129,16 @@ export default function Cadastro() {
                   <div className="space-y-1">
                     <p>{error.message}</p>
                     {error.type === "email_exists" && (
-                      <p>
-                        <Link to="/login" className="font-semibold underline underline-offset-2">
-                          Clique aqui para entrar na sua conta
-                        </Link>
-                      </p>
+                      <>
+                        <p>
+                          <Link to="/login" className="font-semibold underline underline-offset-2">
+                            Clique aqui para entrar na sua conta
+                          </Link>
+                        </p>
+                        <p className="text-xs opacity-80">
+                          Se ainda não confirmou o e-mail, verifique sua caixa de entrada — o link de confirmação pode estar lá.
+                        </p>
+                      </>
                     )}
                     {error.type === "weak_password" && (
                       <p className="text-xs opacity-80">
