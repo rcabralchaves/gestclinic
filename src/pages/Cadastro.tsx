@@ -87,12 +87,20 @@ export default function Cadastro() {
     }
 
     if (signUpData.user) {
+      const uid = signUpData.user.id;
+
       await supabase.from("profiles" as any).insert({
-        user_id:          signUpData.user.id,
+        user_id:          uid,
         nome:             email.split("@")[0] || "",
         email:            email,
         plano:            planoSelecionado,
         onboarding_step:  0,   // inicia onboarding na primeira entrada
+      } as any);
+
+      await supabase.from("subscriptions" as any).insert({
+        user_id: uid,
+        plano:   planoSelecionado,
+        status:  "trial",
       } as any);
     }
 
