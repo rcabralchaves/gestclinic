@@ -1,5 +1,5 @@
 import { Lock } from "lucide-react";
-import { usePlano } from "@/hooks/usePlano";
+import { usePlanoUnificado } from "@/hooks/usePlanoUnificado";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -8,7 +8,7 @@ interface PlanGateProps {
 }
 
 export function PlanGate({ children }: PlanGateProps) {
-  const { canAccess, loading } = usePlano();
+  const { canAccess, loading } = usePlanoUnificado();
   const { pathname } = useLocation();
 
   if (loading) {
