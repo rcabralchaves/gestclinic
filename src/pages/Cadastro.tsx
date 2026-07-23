@@ -33,6 +33,7 @@ export default function Cadastro() {
   const [planoSelecionado, setPlanoSelecionado] = useState<"basico" | "completo">("completo");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorState>(null);
+  const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -85,9 +86,8 @@ export default function Cadastro() {
       return;
     }
 
-    // Supabase returns no error but empty identities when email already exists
-    if (!signUpData.user || (signUpData.user.identities && signUpData.user.identities.length === 0)) {
-      setError({ type: "email_exists", message: "Este e-mail já está cadastrado." });
+    if (!signUpData.session) {
+      setSuccess(true);
       setLoading(false);
       return;
     }
@@ -118,6 +118,19 @@ export default function Cadastro() {
           </CardHeader>
           <form onSubmit={handleSignUp}>
             <CardContent className="space-y-5">
+              {/* Success banner */}
+              {success && (
+                <div className="rounded-lg border p-3.5 flex gap-3 items-start text-sm bg-green-50 border-green-200 text-green-800">
+                  <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
+                  <div className="space-y-1">
+                    <p className="font-semibold">Conta criada! Confirme seu e-mail.</p>
+                    <p className="text-xs opacity-80">
+                      Enviamos um link de confirmação para <span className="font-medium">{email}</span>. Verifique sua caixa de entrada (e a pasta de spam) para ativar sua conta.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Error banner */}
               {error && (
                 <div className={`rounded-lg border p-3.5 flex gap-3 items-start text-sm ${
