@@ -7,11 +7,11 @@ import { usePacientes } from "@/context/PacientesContext";
 import { useReceitasDB, useDespesasDB, useEstoqueDB } from "@/hooks/useSupabaseData";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { usePlano } from "@/hooks/usePlano";
+import { usePlanoUnificado } from "@/hooks/usePlanoUnificado";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { isCompleto, loading: planoLoading } = usePlano();
+  const { isCompleto, loading: planoLoading } = usePlanoUnificado();
   const { pacientes, atendimentos: todosAtendimentos } = usePacientes();
   const { receitas } = useReceitasDB();
   const { despesas } = useDespesasDB();
